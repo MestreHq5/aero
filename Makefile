@@ -5,7 +5,9 @@ all: program
 
 program: functions.o main.o
 	clear
+	@echo "Compiling and running the program..."
 	$(CC) $(CFLAGS) -o program functions.o main.o
+	@echo "Compiled, executing..."
 	./program
 
 functions.o: functions.c functions.h
