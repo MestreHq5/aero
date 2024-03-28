@@ -7,7 +7,7 @@
 
 
 // Function prototypes
-void print_test();
+void arguments_error();
 
 
 #endif
