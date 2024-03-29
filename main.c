@@ -22,13 +22,18 @@ int main(int argc, char *argv[]) {
 
     //Reading the files and initializing the structures
     StackAirport *airports = init_airports(fpairports);
-    StackRoute *routes = init_routes(fproutes);
+    //StackRoute *routes = init_routes(fproutes);
 
-
+    //Showing the airports and routes
+    show_airports(airports);
 
     //Closing files
     fclose(fproutes);
     fclose(fpairports);
+
+    //Freeing the memory
+    free(airports);
+    //free(routes);
 
     return 0;
 }

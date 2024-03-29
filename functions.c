@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 //Auxiliary Definitions
 #define EARTH_RADIUS 6371
@@ -79,10 +80,12 @@ StackAirport *init_airports(FILE *fpairports){
         int n_conv;
 
         //Reading the line and storing the data in the airport structure
-        n_conv = sscanf(line, "%s %s %s %s %s %d", airport->ICAO, airport->IATA, airport->latitude, airport->longitude, airport->city, airport->timezone);
+        n_conv = handle_airport_line(line, airport);
 
-        if(n_conv != 6){
+        if(n_conv != 12){
             printf("Error reading line: %s\n", line);
+            free(airport);
+            free(new_airport_container);
             continue; //Skip the current iteration
         }
 
@@ -96,6 +99,39 @@ StackAirport *init_airports(FILE *fpairports){
     return top_airport;
 
 }
+
+int handle_airport_line(char *line, Airport *airport){
+
+    //Variables
+    int n_conv;
+    int lat_deg, lat_min, lat_sec, lon_deg, lon_min, lon_sec;
+    char lat_dir, lon_dir;
+
+    //Reading the line and storing the data in the airport structure
+    n_conv = sscanf(line, "%s %s %d %d %d %c %d %d %d %c %s %d", airport->ICAO, airport->IATA, &lat_deg, &lat_min, &lat_sec, &lat_dir, &lon_deg, &lon_min, &lon_sec, &lon_dir, airport->city, &airport->timezone);
+
+    //Converting the coordinates to a unic string for latitude and a unic string for longitude
+    sprintf(airport->latitude, "%d %d %d %c", lat_deg, lat_min, lat_sec, lat_dir);
+    sprintf(airport->longitude, "%d %d %d %c", lon_deg, lon_min, lon_sec, lon_dir);
+
+    return n_conv;
+}
+
+void show_airports(StackAirport *top_airport ){
+
+    //Variables
+    StackAirport *current_airport = top_airport;
+
+    while(current_airport != NULL){
+        printf("Airport --> ICAO: [%s]  IATA: [%s]  Latitude: [%s]  Longitude: [%s]  City: [%s]  Time Zone: [GMT %d]\n", current_airport->airport.ICAO, current_airport->airport.IATA, current_airport->airport.latitude, current_airport->airport.longitude, current_airport->airport.city, current_airport->airport.timezone);
+        current_airport = current_airport->next_airport;
+
+    }
+}
+
+
+
+
 
 //Routes Functions
 StackRoute *init_route(FILE *fproutes){
@@ -145,16 +181,9 @@ char *find_airline(char *line, char *key_airline){
     return NULL;
 }
 
-void show_airports(Airport* airport)
-{
-    for (int i = airport->top; i >= 0; i--) {
-        printf("%c %c %c %c %c %d\n", airport->ICAO, airport->IATA, airport->latitude, airport->longitude, airport->city, airport->timezone);
-         }
-}
 
-void show_routes(Routes* routes)
-{
-    for (int i = routes->top; i >= 0; i--) {
-        printf("%c %c %c %c %c %c\n", routes->airline, airport->tripcode, airport->IATA_source, airport->IATA_destiny, airport->departure_time, airport->arrival_time);
-         }
-}
+
+
+
+
+

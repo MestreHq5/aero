@@ -1,6 +1,9 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
+#include <stdio.h>
+#include <stdlib.h>
+
 //Auxialiary definitions
 #define DIM_NAME 40
 #define DIM_COORD 15
@@ -49,12 +52,15 @@ float distance_airports(int *geocoordinatesA, int *geocoordinatesB);
 
 //Aiports Functions **********
 StackAirport *init_airports(FILE *fp);
+int handle_airport_line(char *line, Airport *airport); //Returns the number of conversions made
+void show_airports(StackAirport *top_airport);
 
 
 //Routes Functions ***********
 StackRoute *init_routes(FILE *fp);
-
 char *find_airline(char *line, char *key_airline);
 
-void mostra_lista_de_aeroportos(Aeroporto* airport);
+
+
+
 #endif
