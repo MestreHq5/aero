@@ -14,6 +14,10 @@ int main(int argc, char *argv[]) {
         printf("Too few arguments: Execution failed...\n");
         arguments_error();
         return 1;
+    } else if (argc > 7){
+        printf("Too many arguments: Execution failed...\n");
+        arguments_error();
+        return 1;
     }
 
     //Opening files (If an error occurs, the program will stop running and exit with code 1)
@@ -22,10 +26,12 @@ int main(int argc, char *argv[]) {
 
     //Reading the files and initializing the structures
     StackAirport *airports = init_airports(fpairports);
-    //StackRoute *routes = init_routes(fproutes);
+    StackRoute *routes = init_routes(fproutes);
+
 
     //Showing the airports and routes
-    show_airports(airports);
+    //show_airports(airports);
+    show_routes(routes);
 
     //Closing files
     fclose(fproutes);
@@ -33,7 +39,7 @@ int main(int argc, char *argv[]) {
 
     //Freeing the memory
     free(airports);
-    //free(routes);
+    free(routes);
 
     return 0;
 }

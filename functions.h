@@ -28,10 +28,11 @@ typedef struct stack_airport {
 
 //Routes Related
 typedef struct route{
-    char airline[DIM_NAME/2];
+    char airline[DIM_NAME];
     char tripcode[10];
     char IATA_source[4], IATA_destiny[4];
     char departure_time[6], arrival_time[6];
+    float distance;
 } Route;
 
 typedef struct stack_routes {
@@ -44,9 +45,7 @@ typedef struct stack_routes {
 
 //General Functions **********
 void arguments_error();
-
 FILE *open_file(char *filename, char *mode);
-
 float distance_airports(int *geocoordinatesA, int *geocoordinatesB);
 
 
@@ -59,6 +58,7 @@ void show_airports(StackAirport *top_airport);
 //Routes Functions ***********
 StackRoute *init_routes(FILE *fp);
 char *find_airline(char *line, char *key_airline);
+int line_is_empty(char *line);
 
 
 

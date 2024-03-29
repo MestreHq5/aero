@@ -124,6 +124,7 @@ void show_airports(StackAirport *top_airport ){
 
     while(current_airport != NULL){
         printf("Airport --> ICAO: [%s]  IATA: [%s]  Latitude: [%s]  Longitude: [%s]  City: [%s]  Time Zone: [GMT %d]\n", current_airport->airport.ICAO, current_airport->airport.IATA, current_airport->airport.latitude, current_airport->airport.longitude, current_airport->airport.city, current_airport->airport.timezone);
+
         current_airport = current_airport->next_airport;
 
     }
@@ -131,10 +132,8 @@ void show_airports(StackAirport *top_airport ){
 
 
 
-
-
 //Routes Functions
-StackRoute *init_route(FILE *fproutes){
+StackRoute *init_routes(FILE *fproutes){
 
     //Variables
     StackRoute *top_route = NULL;
@@ -142,25 +141,49 @@ StackRoute *init_route(FILE *fproutes){
 
     while (fgets(line, 100, fproutes) != NULL){
         
+        //Check if the line contains the airline name
+        char *airline = find_airline(line, key_airline);
+        printf("Airline: %s ", airline);
+
+        if(airline != NULL){
+            strcpy(current_airline, airline);
+            continue; //Proceed to the next file line
+        } 
+
+        printf("Airline: %s ", current_airline);
+
+
         //Variables
         StackRoute *new_route_container = (StackRoute *)malloc(sizeof(StackRoute));
         Route *route = (Route *)malloc(sizeof(Route));
         int n_conv;
 
-        //Check if the line contains the airline name
-        char *airline = find_airline(line, key_airline);
-        if(airline != NULL){
-            strcpy(current_airline, airline);
-            continue; //Proceed to the next file line
-        }
 
         //Reading the line and storing the data in the route structure
-        n_conv = sscanf(line, "%s %s %s %s %d", route->tripcode, route->IATA_source, route->IATA_destiny, route->departure_time, route->arrival_time);
+        n_conv = sscanf(line, "%s %s %s %s %s", route->tripcode, route->IATA_source, route->departure_time, route->IATA_destiny, route->arrival_time);
+    
 
-        if(n_conv != 6){
-            printf("Error reading line: %s\n", line);
+        if(n_conv != 5){
+            if(line_is_empty(line) == 1){
+                printf("\nError [Empty Line]\n");
+
+            }else{
+                printf("\nError [Unformatted Line]: %s", line);
+            }
+
+            free(route);
+            free(new_route_container);
             continue; //Skip the current iteration
         }
+
+        //Calculating the distance between the airports
+        //route->distance = distance_airports(route->IATA_source, route->IATA_destiny);
+         
+        //Copy the airline name to the route structure
+        strcpy(route->airline, current_airline);
+
+
+
 
         //Pushing the airport to the stack and updating the top
         new_route_container->route = *route;
@@ -172,18 +195,68 @@ StackRoute *init_route(FILE *fproutes){
     return top_route;
 }
 
-char *find_airline(char *line, char *key_airline){
+int line_is_empty(char *line){
 
-    if(strstr(line, key_airline) != NULL){
-        return strstr(line, key_airline) + strlen(key_airline); //Return the airline name without the key
+    //Variables
+    int i = 0;
+
+    while(line[i] != '\0'){
+        if(line[i] != ' ' && line[i] != '\n' && line[i] != '\t' && line[i] != '\r'){
+            return 0; //There is a formatting issue in the line
+        }
+        i++;
     }
 
-    return NULL;
+    return 1; //The line is empty
 }
 
+char *find_airline(char *line, char *key_airline) {
+    
+    char *beginning_pointer = strstr(line, key_airline);
+    
+    // Check if the keyword is in the line
+    if (beginning_pointer == NULL) {
+        return NULL;  
+    }
+
+    beginning_pointer += strlen(key_airline);
+
+    // Find the newline character
+    char *endpointer = strchr(beginning_pointer, '\n');
 
 
+    // Calculate the length of the airline name
+    size_t airline_length = endpointer - beginning_pointer;
 
+    // Allocate memory for the airline name
+    char *airline_name = (char *)malloc(airline_length + 1);
+    if (airline_name == NULL) {
+        return NULL;
+    }
+
+    // Copy the airline name from the line to the allocated memory
+    strncpy(airline_name, beginning_pointer, airline_length);
+    airline_name[airline_length] = '\0';
+
+    return airline_name;
+}
+
+void show_routes(StackRoute *top_route){
+
+    //Variables
+    StackRoute *current_route = top_route;
+
+    while(current_route != NULL){
+        
+        printf("Route --> Airline: [%s]  Tripcode: [%s]  IATA Source: [%s]  IATA Destiny: [%s]  Departure Time: [%s]  Arrival Time: [%s] Distance: [%f] \n", current_route->route.airline, current_route->route.tripcode, current_route->route.IATA_source, current_route->route.IATA_destiny, current_route->route.departure_time, current_route->route.arrival_time, current_route->route.distance);
+
+        current_route = current_route->next_route; //Move to the next route
+
+
+    }
+}
+
+ 
 
 
 
