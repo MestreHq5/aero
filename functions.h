@@ -64,6 +64,7 @@ int line_is_empty(char *line);
 //Distance Functions **********
 char* find_lat_long(char *info);
 double* calculate_real_coordinates(double rad_lat, double rad_long);
+float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny)
 
 
 
