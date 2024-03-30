@@ -53,12 +53,15 @@ float distance_airports(int *geocoordinatesA, int *geocoordinatesB);
 StackAirport *init_airports(FILE *fp);
 int handle_airport_line(char *line, Airport *airport); //Returns the number of conversions made
 void show_airports(StackAirport *top_airport);
+char *find_airport(StackAirport *airport, const char *targetIATA);
 
 
 //Routes Functions ***********
 StackRoute *init_routes(FILE *fp);
 char *find_airline(char *line, char *key_airline);
 int line_is_empty(char *line);
+
+//
 
 
 
