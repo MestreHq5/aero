@@ -61,7 +61,8 @@ StackRoute *init_routes(FILE *fp);
 char *find_airline(char *line, char *key_airline);
 int line_is_empty(char *line);
 
-//
+//Distance Functions **********
+char* find_lat_long(char *info);
 
 
 
