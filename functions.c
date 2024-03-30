@@ -7,6 +7,8 @@
 //Auxiliary Definitions
 #define EARTH_RADIUS 6371
 #define REAL_RADIUS 6381 // Earth radius + 10 km altitude
+#define DIM_COORD 15
+#define PI 3.1415926535
 
 
 
@@ -137,53 +139,44 @@ StackRoute *init_routes(FILE *fproutes){
 
     //Variables
     StackRoute *top_route = NULL;
-    char line[100], current_airline[DIM_NAME], *key_airline = "AIRLINE: ";
+    char line[100], current_airline[DIM_NAME] = "", *key_airline = "AIRLINE: ";
 
     while (fgets(line, 100, fproutes) != NULL){
+
+        //Check if the line is empty
+        if (line_is_empty(line)){
+            continue; //Skip the current iteration
+        } 
         
         //Check if the line contains the airline name
         char *airline = find_airline(line, key_airline);
-        printf("Airline: %s ", airline);
 
         if(airline != NULL){
             strcpy(current_airline, airline);
             continue; //Proceed to the next file line
         } 
 
-        printf("Airline: %s ", current_airline);
-
-
         //Variables
         StackRoute *new_route_container = (StackRoute *)malloc(sizeof(StackRoute));
         Route *route = (Route *)malloc(sizeof(Route));
         int n_conv;
 
-
         //Reading the line and storing the data in the route structure
         n_conv = sscanf(line, "%s %s %s %s %s", route->tripcode, route->IATA_source, route->departure_time, route->IATA_destiny, route->arrival_time);
-    
 
+        //Check if the line is unformatted
         if(n_conv != 5){
-            if(line_is_empty(line) == 1){
-                printf("\nError [Empty Line]\n");
-
-            }else{
-                printf("\nError [Unformatted Line]: %s", line);
-            }
-
+            printf("\nError [Unformatted Line]: %s", line);
             free(route);
             free(new_route_container);
             continue; //Skip the current iteration
         }
 
         //Calculating the distance between the airports
-        //route->distance = distance_airports(route->IATA_source, route->IATA_destiny);
+
          
         //Copy the airline name to the route structure
         strcpy(route->airline, current_airline);
-
-
-
 
         //Pushing the airport to the stack and updating the top
         new_route_container->route = *route;
@@ -211,34 +204,31 @@ int line_is_empty(char *line){
 }
 
 char *find_airline(char *line, char *key_airline) {
-    
+
+    int index;
+    char *airline = (char *)malloc(DIM_NAME * sizeof(char));
     char *beginning_pointer = strstr(line, key_airline);
     
-    // Check if the keyword is in the line
-    if (beginning_pointer == NULL) {
+    // Check if the keyword is in the line or the allocation failed
+    if ((beginning_pointer == NULL) || airline == NULL){
         return NULL;  
     }
 
+    //Advance to the final of the Keyword "AIRLINE:"
     beginning_pointer += strlen(key_airline);
 
-    // Find the newline character
-    char *endpointer = strchr(beginning_pointer, '\n');
+    //Copy the Ailine Name to a string
+    for (index = 0; (index < DIM_NAME) && (*beginning_pointer != ('\r' || '\n')); index++){
 
-
-    // Calculate the length of the airline name
-    size_t airline_length = endpointer - beginning_pointer;
-
-    // Allocate memory for the airline name
-    char *airline_name = (char *)malloc(airline_length + 1);
-    if (airline_name == NULL) {
-        return NULL;
+        airline[index] = *beginning_pointer;
+        beginning_pointer++;
+    
     }
 
-    // Copy the airline name from the line to the allocated memory
-    strncpy(airline_name, beginning_pointer, airline_length);
-    airline_name[airline_length] = '\0';
+    //Teminate the string an return
+    airline[index] = '\0';
 
-    return airline_name;
+    return airline;
 }
 
 void show_routes(StackRoute *top_route){
@@ -248,15 +238,127 @@ void show_routes(StackRoute *top_route){
 
     while(current_route != NULL){
         
-        printf("Route --> Airline: [%s]  Tripcode: [%s]  IATA Source: [%s]  IATA Destiny: [%s]  Departure Time: [%s]  Arrival Time: [%s] Distance: [%f] \n", current_route->route.airline, current_route->route.tripcode, current_route->route.IATA_source, current_route->route.IATA_destiny, current_route->route.departure_time, current_route->route.arrival_time, current_route->route.distance);
+        printf("Route: [%s] %s %s ---> %s %s [%f] %s", current_route->route.tripcode, current_route->route.departure_time, current_route->route.IATA_source, current_route->route.IATA_destiny, current_route->route.arrival_time, current_route->route.distance, current_route->route.airline);
 
         current_route = current_route->next_route; //Move to the next route
-
-
     }
 }
 
- 
+char *find_airport(StackAirport *airport, const char *targetIATA) {
+    StackAirport *current = airport;
+
+    while (current != NULL) {
+        // Check if the current airport's IATA code matches the target
+        if (strcmp(current->airport.IATA, targetIATA) == 0) {
+            // If found, create a string with the information about the airport
+            char *info = (char*)malloc(256 * sizeof(char));
+            if (info == NULL) {
+                fprintf(stderr, "Memory allocation failed\n");
+                return NULL; // or handle error appropriately
+            }
+
+            sprintf(info, "ICAO: %s\nIATA: %s\nLatitude: %s\nLongitude: %s\nCity: %s\nTimezone: %d\n",
+                    current->airport.ICAO, current->airport.IATA, current->airport.latitude,
+                    current->airport.longitude, current->airport.city, current->airport.timezone);
+            return info;
+        }
+        // Move to the next airport in the stack
+        current = current->next_airport;
+    }
+
+    // If the target airport is not found, return NULL
+    return NULL;
+}
 
 
+char* find_lat_long(char *info) {
 
+    float lat_deg, lat_min, lat_sec;
+    float long_deg, long_min, long_sec;
+    char lat_dir, long_dir;
+
+    char *latitude = (char*)malloc(DIM_COORD * sizeof(char));
+    if (latitude == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
+
+    // Parse the input string to extract degrees, minutes, and seconds
+    sscanf(latitude, "%lf %lf %lf %c ", &lat_deg, &lat_min, &lat_sec, &lat_dir);
+
+
+    char *longitude = (char*)malloc(DIM_COORD * sizeof(char));
+    if (longitude == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
+
+    // Parse the input string to extract degrees, minutes, and seconds
+    sscanf(longitude, "%lf %lf %lf ", &long_deg, &long_min, &long_sec, &long_dir);
+
+    // Calculate total degrees
+    double totalDegrees_lat = lat_deg + (lat_min / 60.0) + (lat_min / 3600.0);
+    double rad_lat=totalDegrees_lat* PI/180; //PI definido em cima
+
+    if(lat_dir=='S')
+    rad_lat=-rad_lat;
+
+
+    double totalDegrees_long = long_deg + (long_min / 60.0) + (long_sec / 3600.0);
+    double rad_long=totalDegrees_long * PI/180;//PI definido em cima
+
+    if(long_dir=='W')
+    rad_long=-rad_long;
+    
+
+    // Allocate memory for the result string
+    char* result = (char*)malloc(100 * sizeof(char));
+    if (result == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return 1;
+    }
+
+    // Format rad_lat and rad_long into the result string
+    sprintf(result, "Rad_lat: %f\nRad_long: %f\n", rad_lat, rad_long);
+
+    return result;
+}
+
+
+//Calculating the distance between the airports
+float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny){
+        
+
+        //Variables
+        char* Airport_source = find_airport(airport, IATA_source);
+        char* Lat_long_source = find_lat_long(Airport_source);
+            
+        char* Airport_destiny= find_airport(StackAirport *airport, IATA_destiny);
+        char* Lat_long_destiny = find_lat_long(Airport_destiny);
+
+    double source_rad_lat, source_rad_long, destiny_rad_lat, destiny_rad_long;
+
+        // Parse the input string to extract rad_lat and rad_long
+    sscanf(Lat_long_source, "Rad_lat: %lf\nRad_long: %lf", &source_rad_lat, &source_rad_long);
+    sscanf(Lat_long_destiny, "Rad_lat: %lf\nRad_long: %lf", &destiny_rad_lat, &destiny_rad_long);
+
+
+    int real_coordinates_source[3]; // xa ya za
+    int real_coordinates_destiny[3]; // xb yb zb
+    int angle_airports;
+
+    //Real coordinates of airport A
+    real_coordinates_source[0] = REAL_RADIUS * cos(source_rad_lat) * cos(source_rad_long);
+    real_coordinates_source[1] = REAL_RADIUS * cos(source_rad_lat) * sin(source_rad_long);
+    real_coordinates_source[2] = REAL_RADIUS * sin(source_rad_lat);
+
+    //Real coordinates of airport B
+    real_coordinates_destiny[0] = REAL_RADIUS * cos(destiny_rad_lat) * cos(destiny_rad_long);
+    real_coordinates_destiny[1] = REAL_RADIUS * cos(destiny_rad_lat) * sin(destiny_rad_long);
+    real_coordinates_destiny[2] = REAL_RADIUS * sin(destiny_rad_lat);
+
+    //Calculate the angle in radians between the airports
+    angle_airports = acos((real_coordinates_source[0] * real_coordinates_destiny[0] + real_coordinates_source[1] * real_coordinates_destiny[1] + real_coordinates_source[2] * real_coordinates_destiny[2]) / (sqrt(real_coordinates_source[0] * real_coordinates_source[0] + real_coordinates_source[1] * real_coordinates_source[1] + real_coordinates_source[2] * real_coordinates_source[2]) * sqrt(real_coordinates_destiny[0] * real_coordinates_destiny[0] + real_coordinates_destiny[1] * real_coordinates_destiny[1] + real_coordinates_destiny[2] * real_coordinates_destiny[2])));
+
+    return angle_airports * EARTH_RADIUS;
+}   
