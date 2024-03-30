@@ -59,15 +59,19 @@ Airport *find_airport_by_IATA(StackAirport *airport, const char *code_IATA);
 
 
 //Routes Functions ***********
-StackRoute *init_routes(FILE *fp);
+StackRoute *init_routes(FILE *fp, StackAirport *airports);
 char *find_airline(char *line, char *key_airline);
 int line_is_empty(char *line);
 void free_routes(StackRoute *top_route);
+float distance_airports(StackAirport *airports, Route* route);
+
 
 //Distance Functions **********
+void coordinates_parser(Airport *airport, double coord_vector[2]);
+void real_coordinates(double source_coord[3], double real_source_coord[3], float radius);
 char* find_lat_long(char *info);
 double* calculate_real_coordinates(double rad_lat, double rad_long);
-float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny);
+//float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny);
 
 
 

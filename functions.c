@@ -9,6 +9,12 @@
 #define REAL_RADIUS 6381 // Earth radius + 10 km altitude
 #define DIM_COORD 15
 #define PI 3.1415926535
+#define LATITUDE 0 
+#define LONGITUDE 1
+#define X 0 
+#define Y 1 
+#define Z 2
+
 
 
 
@@ -30,7 +36,7 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
     }
 
     //Check if the second argument and divide the cases
-    if (strcmp(argv[1], "-rotas") == 0){
+    if (strcmp(argv[1], "-voos") == 0){
         show_routes(routes);
         return;
 
@@ -41,20 +47,13 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
 
     //Check if the second argument is a valid IATA code
     airport_source = find_airport_by_IATA(airports, argv[1]);
+    airport_destiny = find_airport_by_IATA(airports, argv[2]);
 
-    if (airport_source == NULL){
-        printf("Invalid IATA code for the source airport: Execution failed...\n");
+    if (airport_source == NULL || airport_destiny == NULL){
+        printf("Invalid IATA code for the source or destiny airport: Execution failed...\n");
         return;
     }
-
-    //Check if the third argument is a valid IATA code
-    airport_destiny = find_airport(airports, argv[2]);
-
-    if (airport_destiny == NULL){
-        printf("Invalid IATA code for the destiny airport: Execution failed...\n");
-        return;
-    }
-
+    
     //Check if the fourth argument is a valid option
     return;
 }
@@ -89,30 +88,6 @@ FILE *open_file(char *filename, char *mode){
     return file_pointer;
 }
 
-/*
-float distance_airports(int *geocoordinatesA, int *geocoordinatesB){
-
-    int real_coordinatesA[3]; // xa ya za
-    int real_coordinatesB[3]; // xb yb zb
-    int angle_airports;
-
-    //Real coordinates of airport A
-    real_coordinatesA[0] = REAL_RADIUS * cos(geocoordinatesA[0]) * cos(geocoordinatesA[1]);
-    real_coordinatesA[1] = REAL_RADIUS * cos(geocoordinatesA[0]) * sin(geocoordinatesA[1]);
-    real_coordinatesA[2] = REAL_RADIUS * sin(geocoordinatesA[0]);
-
-    //Real coordinates of airport B
-    real_coordinatesB[0] = REAL_RADIUS * cos(geocoordinatesB[0]) * cos(geocoordinatesB[1]);
-    real_coordinatesB[1] = REAL_RADIUS * cos(geocoordinatesB[0]) * sin(geocoordinatesB[1]);
-    real_coordinatesB[2] = REAL_RADIUS * sin(geocoordinatesB[0]);
-
-    //Calculate the angle in radians between the airports
-    angle_airports = acos((real_coordinatesA[0] * real_coordinatesB[0] + real_coordinatesA[1] * real_coordinatesB[1] + real_coordinatesA[2] * real_coordinatesB[2]) / (sqrt(real_coordinatesA[0] * real_coordinatesA[0] + real_coordinatesA[1] * real_coordinatesA[1] + real_coordinatesA[2] * real_coordinatesA[2]) * sqrt(real_coordinatesB[0] * real_coordinatesB[0] + real_coordinatesB[1] * real_coordinatesB[1] + real_coordinatesB[2] * real_coordinatesB[2])));
-
-    return angle_airports * EARTH_RADIUS;
-
-}
-*/
 
 //Airports Functions
 StackAirport *init_airports(FILE *fpairports){
@@ -209,7 +184,7 @@ void free_airports(StackAirport *top_airport){
 
 
 //Routes Functions
-StackRoute *init_routes(FILE *fproutes){
+StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
 
     //Variables
     StackRoute *top_route = NULL;
@@ -247,7 +222,7 @@ StackRoute *init_routes(FILE *fproutes){
         }
 
         //Calculating the distance between the airports
-
+        route->distance = distance_airports(airports, route);
          
         //Copy the airline name to the route structure
         strcpy(route->airline, current_airline);
@@ -312,36 +287,79 @@ void show_routes(StackRoute *top_route){
 
     while(current_route != NULL){
         
-        printf("Route: [%s] %s %s ---> %s %s [%f] %s", current_route->route.tripcode, current_route->route.departure_time, current_route->route.IATA_source, current_route->route.IATA_destiny, current_route->route.arrival_time, current_route->route.distance, current_route->route.airline);
+        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s", current_route->route.tripcode, current_route->route.departure_time, current_route->route.IATA_source, current_route->route.IATA_destiny, current_route->route.arrival_time, current_route->route.distance, current_route->route.airline);
 
         current_route = current_route->next_route; //Move to the next route
     }
 }
 
-char *find_airport(StackAirport *airport, const char *targetIATA) {
-    StackAirport *current = airport;
+float distance_airports(StackAirport *airports, Route* route){
+        
+    //Variables
+    Airport *airport_source = find_airport_by_IATA(airports, route->IATA_source);
+    Airport *airport_destiny = find_airport_by_IATA(airports, route->IATA_destiny);
+    
+    double source_coord[2], destiny_coord[2];
+    double real_source_coord[3], real_destiny_coord[3];
+    float angle_airports;
 
-    while (current != NULL) {
-        // Check if the current airport's IATA code matches the target
-        if (strcmp(current->airport.IATA, targetIATA) == 0) {
-            // If found, create a string with the information about the airport
-            char *info = (char*)malloc(256 * sizeof(char));
-            if (info == NULL) {
-                fprintf(stderr, "Memory allocation failed\n");
-                return NULL; // or handle error appropriately
-            }
-
-            sprintf(info, "ICAO: %s\nIATA: %s\nLatitude: %s\nLongitude: %s\nCity: %s\nTimezone: %d\n",
-                    current->airport.ICAO, current->airport.IATA, current->airport.latitude,
-                    current->airport.longitude, current->airport.city, current->airport.timezone);
-            return info;
-        }
-        // Move to the next airport in the stack
-        current = current->next_airport;
+    //Check if the IATA codes are valid
+    if(airport_source == NULL || airport_destiny == NULL){
+        return -1; //Negative distance implies the airports were not found 
     }
 
-    // If the target airport is not found, return NULL
-    return NULL;
+    //Parse the strings to extract the coordinates in degrees, minutes and seconds and convert to degree
+    coordinates_parser(airport_source, source_coord);
+    coordinates_parser(airport_destiny, destiny_coord);
+
+    //Convert the angle to radians
+    source_coord[LATITUDE] = source_coord[LATITUDE] * PI / 180;
+    source_coord[LONGITUDE] = source_coord[LONGITUDE] * PI / 180;
+    destiny_coord[LATITUDE] = destiny_coord[LATITUDE] * PI / 180;
+    destiny_coord[LONGITUDE] = destiny_coord[LONGITUDE] * PI / 180;
+
+    //Real Coordinates
+    real_coordinates(source_coord, real_source_coord, REAL_RADIUS);
+    real_coordinates(destiny_coord, real_destiny_coord, REAL_RADIUS);
+
+    //Calculate the angle between the real coordinates
+    angle_airports = acos((real_source_coord[X] * real_destiny_coord[X] + real_source_coord[Y] * real_destiny_coord[Y] + real_source_coord[Z] * real_destiny_coord[Z]) / (sqrt(real_source_coord[X] * real_source_coord[X] + real_source_coord[Y] * real_source_coord[Y] + real_source_coord[Z] * real_source_coord[Z]) * sqrt(real_destiny_coord[X] * real_destiny_coord[X] + real_destiny_coord[Y] * real_destiny_coord[Y] + real_destiny_coord[Z] * real_destiny_coord[Z])));
+
+    return angle_airports * EARTH_RADIUS;
+}
+
+void coordinates_parser(Airport *airport, double coord_vector[2]){
+
+    //Variables
+    int lat_deg, lat_min, lat_sec, lon_deg, lon_min, lon_sec;
+    char lat_dir, lon_dir;
+
+    //Extract latitude and longitude information from the airport
+    sscanf(airport->latitude, "%d %d %d %c", &lat_deg, &lat_min, &lat_sec, &lat_dir);
+    sscanf(airport->longitude, "%d %d %d %c", &lon_deg, &lon_min, &lon_sec, &lon_dir);
+
+    //Calculate total degrees
+    coord_vector[LATITUDE] = lat_deg + (lat_min / 60.0) + (lat_sec / 3600.0);
+    coord_vector[LONGITUDE] = lon_deg + (lon_min / 60.0) + (lon_sec / 3600.0);
+
+    //Check if Directions: -1 -1 -1 N == 1 1 1 S (example)
+    if(lat_dir == 'S'){
+        coord_vector[0] = -coord_vector[0];
+    }
+
+    if(lon_dir == 'W'){
+        coord_vector[1] = -coord_vector[1];
+    }
+
+}
+
+void real_coordinates(double coord[2], double real_coord[3], float radius){
+
+    //Calculate Coordinates (Origin --> Center of Earth)
+    real_coord[X] = radius * cos(coord[LATITUDE]) * cos(coord[LONGITUDE]);
+    real_coord[Y] = radius * cos(coord[LATITUDE]) * sin(coord[LONGITUDE]);
+    real_coord[Z] = radius * sin(coord[LATITUDE]);
+    
 }
 
 void free_routes(StackRoute *top_route) {
@@ -354,109 +372,5 @@ void free_routes(StackRoute *top_route) {
     }
 }
 
-/*
-
-char* find_lat_long(char *info) {
-
-    float lat_deg, lat_min, lat_sec;
-    float long_deg, long_min, long_sec;
-    char lat_dir, long_dir;
-
-    char *latitude = (char*)malloc(DIM_COORD * sizeof(char));
-    if (latitude == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return 1;
-    }
-
-    // Parse the input string to extract degrees, minutes, and seconds
-    sscanf(latitude, "%lf %lf %lf %c ", &lat_deg, &lat_min, &lat_sec, &lat_dir);
 
 
-    char *longitude = (char*)malloc(DIM_COORD * sizeof(char));
-    if (longitude == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return 1;
-    }
-
-    // Parse the input string to extract degrees, minutes, and seconds
-    sscanf(longitude, "%lf %lf %lf ", &long_deg, &long_min, &long_sec, &long_dir);
-
-    // Calculate total degrees
-    double totalDegrees_lat = lat_deg + (lat_min / 60.0) + (lat_min / 3600.0);
-    double rad_lat=totalDegrees_lat* PI/180; //PI definido em cima
-
-    if(lat_dir=='S')
-    rad_lat=-rad_lat;
-
-
-    double totalDegrees_long = long_deg + (long_min / 60.0) + (long_sec / 3600.0);
-    double rad_long=totalDegrees_long * PI/180;//PI definido em cima
-
-    if(long_dir=='W')
-    rad_long=-rad_long;
-    
-
-    // Allocate memory for the result string
-    char* result = (char*)malloc(100 * sizeof(char));
-    if (result == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return 1;
-    }
-
-    // Format rad_lat and rad_long into the result string
-    sprintf(result, "Rad_lat: %f\nRad_long: %f\n", rad_lat, rad_long);
-
-    return result;
-}
-
-double* calculate_real_coordinates(double rad_lat, double rad_long) {
-    // Allocate memory for the array
-    double* coordinates = (double*)malloc(3 * sizeof(double));
-    if (coordinates == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(1);
-    }
-
-    // Calculate the Cartesian coordinates
-    coordinates[0] = REAL_RADIUS * cos(rad_lat) * cos(rad_long);
-    coordinates[1] = REAL_RADIUS * cos(rad_lat) * sin(rad_long);
-    coordinates[2] = REAL_RADIUS * sin(rad_lat);
-
-    return coordinates;
-}
-
-//Calculating the distance between the airports
-float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny){
-        
-
-        //Variables
-        char* Airport_source = find_airport(airport, IATA_source);
-        char* Lat_long_source = find_lat_long(Airport_source);
-            
-        char* Airport_destiny= find_airport(StackAirport *airport, IATA_destiny);
-        char* Lat_long_destiny = find_lat_long(Airport_destiny);
-
-    double source_rad_lat, source_rad_long, destiny_rad_lat, destiny_rad_long;
-
-        // Parse the input string to extract rad_lat and rad_long
-    sscanf(Lat_long_source, "Rad_lat: %lf\nRad_long: %lf", &source_rad_lat, &source_rad_long);
-    sscanf(Lat_long_destiny, "Rad_lat: %lf\nRad_long: %lf", &destiny_rad_lat, &destiny_rad_long);
-
-
-    int real_coordinates_source[3]; // xa ya za
-    int real_coordinates_destiny[3]; // xb yb zb
-    int angle_airports;
-
-    //Real coordinates of airport A
-    double* calculate_real_coordinates(double *source_rad_lat, double *source_rad_long)
-    
-    //Real coordinates of airport B
-    double* calculate_real_coordinates(double *destiny_rad_long, double *destiny_rad_long)
-
-    //Calculate the angle in radians between the airports
-    angle_airports = acos((real_coordinates_source[0] * real_coordinates_destiny[0] + real_coordinates_source[1] * real_coordinates_destiny[1] + real_coordinates_source[2] * real_coordinates_destiny[2]) / (sqrt(real_coordinates_source[0] * real_coordinates_source[0] + real_coordinates_source[1] * real_coordinates_source[1] + real_coordinates_source[2] * real_coordinates_source[2]) * sqrt(real_coordinates_destiny[0] * real_coordinates_destiny[0] + real_coordinates_destiny[1] * real_coordinates_destiny[1] + real_coordinates_destiny[2] * real_coordinates_destiny[2])));
-
-    return angle_airports * EARTH_RADIUS;
-}   
-
-*/

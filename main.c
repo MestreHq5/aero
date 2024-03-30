@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
     //Reading the files and initializing the structures
     StackAirport *airports = init_airports(fpairports);
-    StackRoute *routes = init_routes(fproutes);
+    StackRoute *routes = init_routes(fproutes, airports);
     
     //Handling the arguments: This function will control all the execution of the program
     handle_arguments(argc, argv, airports, routes);   
