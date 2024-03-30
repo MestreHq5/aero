@@ -44,9 +44,16 @@ typedef struct stack_routes {
 // Function prototypes
 
 //General Functions **********
+
+/*Function that is called to help the user defining what he wants from the program.
+It list the order in which the user should input the data*/
 void arguments_error();
+
+/**/
+int arguments_number();
 FILE *open_file(char *filename, char *mode);
 void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
+
 
 
 //Aiports Functions **********

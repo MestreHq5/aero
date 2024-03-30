@@ -1,4 +1,5 @@
 #include "functions.h"
+#include "algorithms.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,13 +17,12 @@
 #define Z 2
 
 
-
-
-//Functions
+//General Functions
 void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes){
 
     //Variables
     Airport *airport_source, *airport_destiny;
+    int layovers, time_option;
 
     //Check if the number of arguments is correct
     if (argc < 2 || argc == 3 || argc == 4) {
@@ -45,7 +45,7 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
         return;
     }
 
-    //Check if the second argument is a valid IATA code
+    //Check if the second and third arguments are valid IATA codes
     airport_source = find_airport_by_IATA(airports, argv[1]);
     airport_destiny = find_airport_by_IATA(airports, argv[2]);
 
@@ -55,7 +55,47 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
     }
     
     //Check if the fourth argument is a valid option
+    if (strcmp(argv[3], "-L") != 0){
+        printf("Invalid option to specify layovers: Execution failed...\n");
+        exit(1);
+    }
+
+    //Check the number of layovers
+    layovers = atoi(argv[4]);
+    if (layovers < 0 || layovers > 2){
+        printf("Invalid number of layovers: Execution failed...\n");
+        exit(1);
+    }
+
+    //Check if the time sorting option is valid
+    time_option = time_sort_option(argv[5]);
+
+    if (argc == 7){
+        if (strcmp(argv[6], "-D") != 0){
+            printf("Invalid option to sort by distance: Execution failed...\n");
+            exit(1);
+        }
+    }
+
     return;
+}
+
+
+
+int time_sort(char *option){
+
+    if (strcmp(option, "-TC") == 0){
+        return 1;
+
+    } else if (strcmp(option, "-TD") == 0){
+        return 0;
+
+    } else {
+        
+        printf("Invalid option to sort by time: Execution failed...\n");
+        exit(1);
+    }
+
 }
 
 void arguments_error() {
@@ -210,20 +250,20 @@ StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
         Route *route = (Route *)malloc(sizeof(Route));
         int n_conv;
 
+
         //Reading the line and storing the data in the route structure
         n_conv = sscanf(line, "%s %s %s %s %s", route->tripcode, route->IATA_source, route->departure_time, route->IATA_destiny, route->arrival_time);
 
+        //Calculating the distance between the airports
+        route->distance = distance_airports(airports, route);
+        
         //Check if the line is unformatted
-        if(n_conv != 5){
-            printf("\nError [Unformatted Line]: %s", line);
+        if(n_conv != 5 || route->distance < 0){
             free(route);
             free(new_route_container);
             continue; //Skip the current iteration
         }
 
-        //Calculating the distance between the airports
-        route->distance = distance_airports(airports, route);
-         
         //Copy the airline name to the route structure
         strcpy(route->airline, current_airline);
 
@@ -371,6 +411,3 @@ void free_routes(StackRoute *top_route) {
         current_route = next_route;
     }
 }
-
-
-

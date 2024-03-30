@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "functions.h"
+#include "algorithms.h"
 
 int main(int argc, char *argv[]) {
 
