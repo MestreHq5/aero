@@ -46,26 +46,28 @@ typedef struct stack_routes {
 //General Functions **********
 void arguments_error();
 FILE *open_file(char *filename, char *mode);
-float distance_airports(int *geocoordinatesA, int *geocoordinatesB);
+void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
 
 
 //Aiports Functions **********
 StackAirport *init_airports(FILE *fp);
-int handle_airport_line(char *line, Airport *airport); //Returns the number of conversions made
+int handle_airport_line(char *line, Airport *airport);
 void show_airports(StackAirport *top_airport);
 char *find_airport(StackAirport *airport, const char *targetIATA);
+void free_airports(StackAirport *top_airport);
+Airport *find_airport_by_IATA(StackAirport *airport, const char *code_IATA);
 
 
 //Routes Functions ***********
 StackRoute *init_routes(FILE *fp);
 char *find_airline(char *line, char *key_airline);
 int line_is_empty(char *line);
+void free_routes(StackRoute *top_route);
 
 //Distance Functions **********
 char* find_lat_long(char *info);
 double* calculate_real_coordinates(double rad_lat, double rad_long);
-float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny)
-
+float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny);
 
 
 

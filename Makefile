@@ -2,12 +2,12 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 LDLIBS = -lm
 
-all: program
+all: rotas2024
 
-program: functions.o main.o
+rotas2024: functions.o main.o
 	clear
 	@echo "Compiling and running the program..."
-	$(CC) $(CFLAGS) -o program functions.o main.o $(LDLIBS)
+	$(CC) $(CFLAGS) -o rotas2024 functions.o main.o $(LDLIBS)
 	@echo "Compiled successfully!"
 
 functions.o: functions.c functions.h
@@ -17,7 +17,7 @@ main.o: main.c functions.h
 	$(CC) $(CFLAGS) -c main.c
 
 clean:
-	@rm -f program *.o
+	@rm -f rotas2024 *.o
 
 
 

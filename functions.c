@@ -13,6 +13,52 @@
 
 
 //Functions
+void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes){
+
+    //Variables
+    Airport *airport_source, *airport_destiny;
+
+    //Check if the number of arguments is correct
+    if (argc < 2 || argc == 3 || argc == 4) {
+        printf("Too few arguments: Execution failed...\n");
+        arguments_error();
+        return;
+    } else if (argc > 7){
+        printf("Too many arguments: Execution failed...\n");
+        arguments_error();
+        return;
+    }
+
+    //Check if the second argument and divide the cases
+    if (strcmp(argv[1], "-rotas") == 0){
+        show_routes(routes);
+        return;
+
+    } else if (strcmp(argv[1], "-aeroportos") == 0){
+        show_airports(airports);
+        return;
+    }
+
+    //Check if the second argument is a valid IATA code
+    airport_source = find_airport_by_IATA(airports, argv[1]);
+
+    if (airport_source == NULL){
+        printf("Invalid IATA code for the source airport: Execution failed...\n");
+        return;
+    }
+
+    //Check if the third argument is a valid IATA code
+    airport_destiny = find_airport(airports, argv[2]);
+
+    if (airport_destiny == NULL){
+        printf("Invalid IATA code for the destiny airport: Execution failed...\n");
+        return;
+    }
+
+    //Check if the fourth argument is a valid option
+    return;
+}
+
 void arguments_error() {
     printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
     printf("\nThe list below explain the commands for this aplication:\n");
@@ -43,6 +89,7 @@ FILE *open_file(char *filename, char *mode){
     return file_pointer;
 }
 
+/*
 float distance_airports(int *geocoordinatesA, int *geocoordinatesB){
 
     int real_coordinatesA[3]; // xa ya za
@@ -65,9 +112,9 @@ float distance_airports(int *geocoordinatesA, int *geocoordinatesB){
     return angle_airports * EARTH_RADIUS;
 
 }
+*/
 
-
-//Aiports Functions
+//Airports Functions
 StackAirport *init_airports(FILE *fpairports){
 
     //Variables
@@ -132,6 +179,33 @@ void show_airports(StackAirport *top_airport ){
     }
 }
 
+Airport *find_airport_by_IATA(StackAirport *airport, const char *code_IATA) {
+    
+    StackAirport *current = airport;
+
+    while (current != NULL) {
+        if (strcmp(current->airport.IATA, code_IATA) == 0) {
+            return &(current->airport);
+        }
+
+        current = current->next_airport;// Move to the next airport in the stack
+    }
+
+    return NULL;
+
+}
+
+void free_airports(StackAirport *top_airport){
+
+    //Variables
+    StackAirport *current_airport = top_airport;
+
+    while(current_airport != NULL){
+        StackAirport *next_airport = current_airport->next_airport;
+        free(current_airport);
+        current_airport = next_airport;
+    }
+}
 
 
 //Routes Functions
@@ -270,6 +344,17 @@ char *find_airport(StackAirport *airport, const char *targetIATA) {
     return NULL;
 }
 
+void free_routes(StackRoute *top_route) {
+    StackRoute *current_route = top_route;
+
+    while (current_route != NULL) {
+        StackRoute *next_route = current_route->next_route;
+        free(current_route);
+        current_route = next_route;
+    }
+}
+
+/*
 
 char* find_lat_long(char *info) {
 
@@ -373,3 +458,5 @@ float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_des
 
     return angle_airports * EARTH_RADIUS;
 }   
+
+*/

@@ -7,18 +7,7 @@
 
 int main(int argc, char *argv[]) {
 
-    printf("\n"); // This line separates the termunal commands to the output of the program
-
-    //Arguments Test
-    if (argc < 2) {
-        printf("Too few arguments: Execution failed...\n");
-        arguments_error();
-        return 1;
-    } else if (argc > 7){
-        printf("Too many arguments: Execution failed...\n");
-        arguments_error();
-        return 1;
-    }
+    printf("\n"); // This line separates the terminal commands to the output of the program
 
     //Opening files (If an error occurs, the program will stop running and exit with code 1)
     FILE *fproutes = open_file("rotas.txt", "r");
@@ -27,19 +16,18 @@ int main(int argc, char *argv[]) {
     //Reading the files and initializing the structures
     StackAirport *airports = init_airports(fpairports);
     StackRoute *routes = init_routes(fproutes);
-
-
-    //Showing the airports and routes
-    //show_airports(airports);
-    show_routes(routes);
-
+    
+    //Handling the arguments: This function will control all the execution of the program
+    handle_arguments(argc, argv, airports, routes);   
+    
     //Closing files
     fclose(fproutes);
     fclose(fpairports);
 
     //Freeing the memory
-    free(airports);
-    free(routes);
+    printf("\nFreeing memory...\n");
+    free_airports(airports);
+    free_routes(routes);
 
     return 0;
 }
