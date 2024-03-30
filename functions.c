@@ -324,6 +324,26 @@ char* find_lat_long(char *info) {
     return result;
 }
 
+char* calculate_real_coordinates(double rad_lat, double rad_long){
+
+    // Calculate the Cartesian coordinates
+    double x = REAL_RADIUS * cos(source_rad_lat) * cos(source_rad_long);
+    double y = REAL_RADIUS * cos(source_rad_lat) * sin(source_rad_long);
+    double z = REAL_RADIUS * sin(source_rad_lat);
+
+    // Allocate memory for the result string
+    char* result = (char*)malloc(50 * sizeof(char)); // Assuming maximum string length for each coordinate
+    if (result == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+
+    // Format the Cartesian coordinates into the result string
+    sprintf(result, "real_coordinates_source[%f, %f, %f]", x, y, z);
+
+    return result;
+}
+
 
 //Calculating the distance between the airports
 float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny){
@@ -348,14 +368,10 @@ float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_des
     int angle_airports;
 
     //Real coordinates of airport A
-    real_coordinates_source[0] = REAL_RADIUS * cos(source_rad_lat) * cos(source_rad_long);
-    real_coordinates_source[1] = REAL_RADIUS * cos(source_rad_lat) * sin(source_rad_long);
-    real_coordinates_source[2] = REAL_RADIUS * sin(source_rad_lat);
-
+    real_coordinates_source=calculate_real_coordinates(double *source_rad_lat, double *source_rad_long)
+    
     //Real coordinates of airport B
-    real_coordinates_destiny[0] = REAL_RADIUS * cos(destiny_rad_lat) * cos(destiny_rad_long);
-    real_coordinates_destiny[1] = REAL_RADIUS * cos(destiny_rad_lat) * sin(destiny_rad_long);
-    real_coordinates_destiny[2] = REAL_RADIUS * sin(destiny_rad_lat);
+    real_coordinates_destiny=calculate_real_coordinates(double *destiny_rad_long, double *destiny_rad_long)
 
     //Calculate the angle in radians between the airports
     angle_airports = acos((real_coordinates_source[0] * real_coordinates_destiny[0] + real_coordinates_source[1] * real_coordinates_destiny[1] + real_coordinates_source[2] * real_coordinates_destiny[2]) / (sqrt(real_coordinates_source[0] * real_coordinates_source[0] + real_coordinates_source[1] * real_coordinates_source[1] + real_coordinates_source[2] * real_coordinates_source[2]) * sqrt(real_coordinates_destiny[0] * real_coordinates_destiny[0] + real_coordinates_destiny[1] * real_coordinates_destiny[1] + real_coordinates_destiny[2] * real_coordinates_destiny[2])));
