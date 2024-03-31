@@ -122,13 +122,22 @@ void insertion_sort_keep_route(KeepRoute **top){
 
 // Function to find routes with one layover
 void find_routes_one_layover(StackRoute *routes, const char *departure, const char *destination) {
+
     StackRoute *current_route = routes;
+
+    //Loop to find flights from the departure airport 
     while (current_route != NULL) {
+        //Find a the first route that departures from the departure airport
         if (strcmp(current_route->route.IATA_source, departure) == 0) {
+
             StackRoute *layover_route = routes;
+
+            //Loop to find flights that departure from where the first flight lands and that land at the destination airport
             while (layover_route != NULL) {
+                //Find the second route that departures from the airport that the first route lands on and that arrives on the destination airport
                 if (strcmp(layover_route->route.IATA_source, current_route->route.IATA_destiny) == 0 && strcmp(layover_route->route.IATA_destiny, destination) == 0) {
                  
+                 //Save the layover_route(Second flight) and the current_route(First flight)
             
                 }
                 layover_route = layover_route->next_route;
@@ -139,3 +148,40 @@ void find_routes_one_layover(StackRoute *routes, const char *departure, const ch
 }
 
 
+// Function to find routes with two layover
+void find_routes_two_layover(StackRoute *routes, const char *departure, const char *destination) {
+
+    StackRoute *current_route = routes;
+
+    //Loop to find flights from the departure airport 
+    while (current_route != NULL) {
+        //Find a the first route that departures from the departure airport
+        if (strcmp(current_route->route.IATA_source, departure) == 0) {
+
+            StackRoute *layover_route_one = routes;
+            
+            //Loop to find flights that departure from where the first flight lands
+            while (layover_route_one != NULL) {
+                //Find the second route that departures from the airport that the first route lands  
+                if (strcmp(layover_route_one->route.IATA_source, current_route->route.IATA_destiny) == 0) {
+                 
+                    StackRoute *layover_route_two = routes;
+                    
+                    //Loop to find the flights that departure from where the second one lands and that arrive at the final destination
+                    while(layover_route_two != NULL){
+                        //Find the thrird flight that departure from where the second one lands and that arrive at the final destination
+                        if(strcmp(layover_route_two->route.IATA_source, layover_route_one->route.IATA_destiny) && strcmp(layover_route_two->route.IATA_destiny, destination)){
+                        
+                        //Save the layover_route_two(Third flight), the layover_roure_one(Second flight) and the current_route(First flight)
+
+                        }
+                      layover_route_two = layover_route_two->next_route;  
+                    }
+            
+                }
+                layover_route_one = layover_route_one->next_route;
+            }
+        }
+        current_route = current_route->next_route;
+    }
+}
