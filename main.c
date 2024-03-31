@@ -11,10 +11,6 @@ void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *r
 
 
 
-
-
-
-
 int main(int argc, char *argv[]) {
 
     printf("\n"); // This line separates the terminal commands to the output of the program
@@ -36,6 +32,7 @@ int main(int argc, char *argv[]) {
 
     //Freeing the memory
     printf("\nFreeing memory...\n");
+    
     free_airports(airports);
     free_routes(routes);
 

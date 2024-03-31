@@ -55,6 +55,16 @@ typedef struct keep_route{
 
 // Function prototypes
 
+//Main function *************
+
+/*This function checks the arguments inputed and detects several errors of data placement as well as detect if the user is asking for the routes or for the airports. 
+If it inputs a route, it will pass it to the function manage routes*/
+void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
+
+/*This function detects the number of layovers that the user is asking for and provides the list of routes possible, accordingly sorted*/
+void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
+
+
 //General Functions **********
 
 /*Function that is called to help the user defining what he wants from the program.
@@ -113,25 +123,36 @@ float distance_airports(StackAirport *airports, Route* route);
 
 
 //Distance Functions **********
+
+/**/
 void coordinates_parser(Airport *airport, double coord_vector[2]);
 
 /*Converts the coordinates from latitude and longitude to X,Y and Z*/
 void real_coordinates(double source_coord[2], double real_source_coord[3], float radius);
 
 
-
 //Algorithms Functions **********
 
+/**/
 void insertion_sort_keep_route(KeepRoute **top_route);
+
+/**/
 void free_keep_route(KeepRoute *top_route);
+
+/**/
 void show_keep_route(KeepRoute *top_route);
+
+/**/
 void show_keep_route_one_layover(KeepRoute *top_route);
+
+/**/
 void show_individual_route(Route *route);
 
 
 
 //List Functions **********
-/**/
+
+/*Searches flights, sorts them and prints them*/
 void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option);
 
 #endif

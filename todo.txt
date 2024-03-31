@@ -1,0 +1,8 @@
+1. Ordenar - Distancia e Tempo (verificar Preocupação Horária)
+
+2. Otimização de Funções (Juntar funções que façam coisas semelhantes, eliminar código repetido)
+
+3. Verificar Memory Leaks (FREE)
+
+
+
