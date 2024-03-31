@@ -53,7 +53,7 @@ void arguments_error();
 int arguments_number();
 FILE *open_file(char *filename, char *mode);
 void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
-
+int time_sort_option(char *option);
 
 
 //Aiports Functions **********

@@ -35,7 +35,7 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
         return;
     }
 
-    //Check if the second argument and divide the cases
+    //Check the second argument and divide the cases
     if (strcmp(argv[1], "-voos") == 0){
         show_routes(routes);
         return;
@@ -50,15 +50,16 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
     airport_destiny = find_airport_by_IATA(airports, argv[2]);
 
     if (airport_source == NULL || airport_destiny == NULL){
-        printf("Invalid IATA code for the source or destiny airport: Execution failed...\n");
+        printf("Invalid IATA code for the source or destiny airport or unformated: Execution failed...\n");
         return;
     }
     
     //Check if the fourth argument is a valid option
     if (strcmp(argv[3], "-L") != 0){
         printf("Invalid option to specify layovers: Execution failed...\n");
-        exit(1);
+        return;
     }
+    
 
     //Check the number of layovers
     layovers = atoi(argv[4]);
@@ -67,8 +68,17 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
         exit(1);
     }
 
+    if (layovers == 0){
+        list_direct_flights(airports, routes, airport_source, airport_destiny, 0);
+        return;
+    }
     //Check if the time sorting option is valid
-    time_option = time_sort_option(argv[5]);
+    if (argc > 5){
+        time_option = time_sort_option(argv[5]);
+    } else {
+        //list_direct_flights(airports, routes, airport_source, airport_destiny, layovers, 0, 0);
+        return;
+    }
 
     if (argc == 7){
         if (strcmp(argv[6], "-D") != 0){
@@ -76,13 +86,12 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
             exit(1);
         }
     }
-
     return;
 }
 
 
 
-int time_sort(char *option){
+int time_sort_option(char *option){
 
     if (strcmp(option, "-TC") == 0){
         return 1;

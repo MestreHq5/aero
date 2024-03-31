@@ -10,34 +10,74 @@
 
 //Functions **********
 
-//Find Possible Flights for a given route (No layover)
-KeepRoute *find_routes_no_layover(StackRoute *routes, const char *airport_source, const char *airport_destiny){
+//Functions Related to the list of direct flights  
+void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option) {
+    
+    //Create a stack of routes to keep (may be sorted or not ---> depends on time_sort_option)
+    KeepRoute *top = (KeepRoute *)malloc(sizeof(KeepRoute));
+    if (top == NULL) {
+        printf("Memory allocation failed while finding routes...\n");
+        exit(1);
+    }
 
-    KeepRoute *top = NULL;
+    //Initialize the stack of keep routes
+    find_routes_no_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
+
+    //Check if sorted is needed
+    if (time_sort_option == -1) {
+        show_keep_route(top);
+    } else if( time_sort_option == 1){
+        insertion_sort_keep_route(&top);
+        show_keep_route(top);
+    }
+}
+
+
+void show_keep_route(KeepRoute *top_route) {
+    //Creating a pointer that moves through the stack of routes
+    KeepRoute *current = top_route;
+   
+    while (current != NULL) {
+        printf("Route: %s -> %s\n", current->route->IATA_source, current->route->IATA_destiny);
+        
+        //Move pointer to the next route
+        current = current->next_route;
+    }
+}
+
+void find_routes_no_layover(StackRoute *routes, const char *airport_source, const char *airport_destiny, KeepRoute **top_stack) {
     StackRoute *current = routes;
 
-    while (current != NULL){
-        if (strcmp(current->route.IATA_source, airport_source) == 0 && strcmp(current->route.IATA_destiny, airport_destiny) == 0){
-            
-            //A flight was found -> will be stored in a stack 
+    while (current != NULL) {
+        if (strcmp(current->route.IATA_source, airport_source) == 0 && strcmp(current->route.IATA_destiny, airport_destiny) == 0) {
+            // A flight was found -> will be added to the existing stack 
+
+            // Allocate memory for a new KeepRoute node
             KeepRoute *new_node = (KeepRoute *)malloc(sizeof(KeepRoute));
-            if (new_node == NULL){
+            if (new_node == NULL) {
                 fprintf(stderr, "Memory allocation failed while finding routes...\n");
                 exit(1);
             }
 
-            //Add the route to the stack and update the top pointer
-            new_node->route = &current->route;
-            new_node->next_route = top;
-            top = new_node;
+            // Allocate memory for a new Route structure and copy the current route's data into it
+            new_node->route = (Route *)malloc(sizeof(Route));
+            if (new_node->route == NULL) {
+                fprintf(stderr, "Memory allocation failed while finding routes...\n");
+                exit(1);
+            }
+            // Copy the contents of the current route into the newly allocated Route structure
+            *(new_node->route) = current->route;
+
+            // Add the route to the top of the existing stack
+            new_node->next_route = *top_stack;
+            *top_stack = new_node;
         }
 
-        //Move to the next route in the Global Stack of Routes
+        // Move to the next route in the Global Stack of Routes
         current = current->next_route;
     }
-
-    return top;
 }
+
 
 //Free the memory allocated for the stack of routes
 void free_keep_route(KeepRoute *top_route){
@@ -80,48 +120,6 @@ void insertion_sort_keep_route(KeepRoute **top){
 }
 
 
-
-/*
-StackRoute* select_flights_between_airports(StackRoute* route, const char* airport_A, const char* airport_B) {
-    StackRoute* route_filtered = NULL; // Initialize the new stack
-
-    // Iterate through the original stack
-    StackRoute* current = route;
-    while (current != NULL) {
-        // Check if the source and destination airports match A and B
-        if (strcmp(current->route.IATA_source, airport_A) == 0 && strcmp(current->route.IATA_destiny, airport_B) == 0) {
-            // Create a new node for the matching route
-            StackRoute* new_node = (StackRoute*)malloc(sizeof(StackRoute));
-            if (new_node == NULL) {
-                fprintf(stderr, "Memory allocation failed\n");
-                // Handle memory allocation failure
-                return 1;
-            }
-            // Copy the route data
-            memcpy(&new_node->route, &current->route, sizeof(Route));
-            new_node->next_route = NULL; // Set the next pointer to NULL for now
-
-            // Add the new node to the new stack
-            if (route_filtered == NULL) {
-                route_filtered = new_node; // If it's the first node, set it as the head of the new stack
-            } else {
-                // Otherwise, find the last node in the new stack and append the new node
-                StackRoute* last_node = route_filtered;
-                while (last_node->next_route != NULL) {
-                    last_node = last_node->next_route;
-                }
-                last_node->next_route = new_node;
-            }
-        }
-        // Move to the next route in the original stack
-        current = current->next_route;
-    }
-
-    return route_filtered;
-}
-
-*/
-
 // Function to find routes with one layover
 void find_routes_one_layover(StackRoute *routes, const char *departure, const char *destination) {
     StackRoute *current_route = routes;
@@ -129,10 +127,9 @@ void find_routes_one_layover(StackRoute *routes, const char *departure, const ch
         if (strcmp(current_route->route.IATA_source, departure) == 0) {
             StackRoute *layover_route = routes;
             while (layover_route != NULL) {
-                if (strcmp(layover_route->route.IATA_source, current_route->route.IATA_destiny) == 0 &&
-                    strcmp(layover_route->route.IATA_destiny, destination) == 0) {
-                    printf("Found route: %s -> %s (%s) -> %s\n", departure,
-                           current_route->route.IATA_destiny, current_route->route.arrival_time, destination);
+                if (strcmp(layover_route->route.IATA_source, current_route->route.IATA_destiny) == 0 && strcmp(layover_route->route.IATA_destiny, destination) == 0) {
+                 
+            
                 }
                 layover_route = layover_route->next_route;
             }
