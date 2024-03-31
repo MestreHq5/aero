@@ -351,7 +351,7 @@ void coordinates_parser(Airport *airport, double coord_vector[2]){
 
 }
 
-void real_coordinates(double coord[3], double real_coord[3], float radius){
+void real_coordinates(double coord[2], double real_coord[3], float radius){
 
     //Calculate Coordinates (Origin --> Center of Earth)
     real_coord[X] = radius * cos(coord[LATITUDE]) * cos(coord[LONGITUDE]);
@@ -397,28 +397,101 @@ void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *ai
     free_keep_route(top);
 }
 
-void show_keep_route(KeepRoute *top_route) {
+void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option) {
     
-    //Creating a pointer that moves through the stack of routes
-    KeepRoute *current_route = top_route;
+    //Create a stack of routes to keep (may be sorted or not ---> depends on time_sort_option)
+    KeepRoute *top = NULL;
+    top = (KeepRoute *)malloc(sizeof(KeepRoute));
 
-    while(current_route != NULL){
-        
-        int count = 0;
+    if (top == NULL) {
+        printf("Memory allocation failed while finding routes...\n");
+        exit(1);
+    }
 
-        if(current_route->route != NULL){
+    //Initialize the stack of keep routes
+    find_routes_one_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
 
-        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", current_route->route->tripcode, current_route->route->departure_time, current_route->route->IATA_source, current_route->route->IATA_destiny, current_route->route->arrival_time, current_route->route->distance, current_route->route->airline);
+    //Check if sorted is needed
+    if (time_sort_option == -1) {
+        show_keep_route_one_layover(top);
+    } else if( time_sort_option == 1){
+        insertion_sort_keep_route(&top);
+        show_keep_route_one_layover(top);
+    }
 
-        } 
+    free_keep_route(top);
+} 
+
+void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option) {
+    
+    //Create a stack of routes to keep (may be sorted or not ---> depends on time_sort_option)
+    KeepRoute *top = NULL;
+    top = (KeepRoute *)malloc(sizeof(KeepRoute));
+
+    if (top == NULL) {
+        printf("Memory allocation failed while finding routes...\n");
+        exit(1);
+    }
+
+    //Initialize the stack of keep routes
+    find_routes_two_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
+
+    //Check if sorted is needed
+    if (time_sort_option == -1) {
+        show_keep_route_two_layover(top);
+    } else if( time_sort_option == 1){
+        insertion_sort_keep_route(&top);
+        show_keep_route_two_layover(top);
+    }
+
+    free_keep_route(top);
+}
 
 
-        
+//Free the memory allocated for the stack of routes
+void free_keep_route(KeepRoute *top_route){
 
-        current_route = current_route->next_route; //Move to the next route
+    while (top_route != NULL){
+        KeepRoute *temp = top_route;
+        top_route = top_route->next_route;
+        free(temp);
     }
 }
 
+//Algorithms Functions
+void insertion_sort_keep_route(KeepRoute **top){
+    
+    //Checks if the stack is empty or has only one element (already sorted)
+    if (*top == NULL || (*top)->next_route == NULL) {
+        return;
+    }
+
+    KeepRoute *sortedStack = NULL;
+    KeepRoute *current = *top;
+
+    while (current != NULL) {
+        KeepRoute *next = current->next_route;
+        if (sortedStack == NULL || sortedStack->route->distance >= current->route->distance) {
+            current->next_route = sortedStack;
+            sortedStack = current;
+        } else {
+            KeepRoute *ptr = sortedStack;
+            while (ptr->next_route != NULL && ptr->next_route->route->distance < current->route->distance) {
+                ptr = ptr->next_route;
+            }
+            current->next_route = ptr->next_route;
+            ptr->next_route = current;
+        }
+        current = next;
+    }
+
+    *top = sortedStack; // Update the top pointer to point to the sorted stack
+}
+
+
+
+
+// Functions to find routes with 0-2 layovers
 void find_routes_no_layover(StackRoute *routes, const char *airport_source, const char *airport_destiny, KeepRoute **top_stack) {
     StackRoute *current = routes;
 
@@ -450,65 +523,34 @@ void find_routes_no_layover(StackRoute *routes, const char *airport_source, cons
     }
 }
 
-//Free the memory allocated for the stack of routes
-void free_keep_route(KeepRoute *top_route){
-
-    while (top_route != NULL){
-        KeepRoute *temp = top_route;
-        top_route = top_route->next_route;
-        free(temp);
-    }
-}
-
-//Order the stack of routes by distance using Insertion Sort
-void insertion_sort_keep_route(KeepRoute **top){
-    
-    //Checks if the stack is empty or has only one element (already sorted)
-    if (*top == NULL || (*top)->next_route == NULL) {
-        return;
-    }
-
-    KeepRoute *sortedStack = NULL;
-    KeepRoute *current = *top;
-
-    while (current != NULL) {
-        KeepRoute *next = current->next_route;
-        if (sortedStack == NULL || sortedStack->route->distance >= current->route->distance) {
-            current->next_route = sortedStack;
-            sortedStack = current;
-        } else {
-            KeepRoute *ptr = sortedStack;
-            while (ptr->next_route != NULL && ptr->next_route->route->distance < current->route->distance) {
-                ptr = ptr->next_route;
-            }
-            current->next_route = ptr->next_route;
-            ptr->next_route = current;
-        }
-        current = next;
-    }
-
-    *top = sortedStack; // Update the top pointer to point to the sorted stack
-}
-
-// Function to find routes with one layover
-void find_routes_one_layover(StackRoute *routes, const char *departure, const char *destination) {
-
+void find_routes_one_layover(StackRoute *routes, const char *departure, const char *destination, KeepRoute **top_stack) {
     StackRoute *current_route = routes;
 
-    //Loop to find flights from the departure airport 
+    // Loop to find flights from the departure airport
     while (current_route != NULL) {
-        //Find a the first route that departures from the departure airport
+        // Find the first route that departs from the departure airport
         if (strcmp(current_route->route.IATA_source, departure) == 0) {
-
+            // Find layover routes starting from where the first flight lands
             StackRoute *layover_route = routes;
-
-            //Loop to find flights that departure from where the first flight lands and that land at the destination airport
             while (layover_route != NULL) {
-                //Find the second route that departures from the airport that the first route lands on and that arrives on the destination airport
-                if (strcmp(layover_route->route.IATA_source, current_route->route.IATA_destiny) == 0 && strcmp(layover_route->route.IATA_destiny, destination) == 0) {
-                 
-                 //Save the layover_route(Second flight) and the current_route(First flight)
-            
+                // Find the second route that departs from where the first flight lands
+                if (strcmp(layover_route->route.IATA_source, current_route->route.IATA_destiny) == 0 &&
+                    strcmp(layover_route->route.IATA_destiny, destination) == 0) {
+                    // Allocate memory for a new KeepRoute node
+                    KeepRoute *new_node = (KeepRoute *)malloc(sizeof(KeepRoute));
+                    if (new_node == NULL) {
+                        fprintf(stderr, "Memory allocation failed while finding routes...\n");
+                        exit(1);
+                    }
+
+                    // Assign routes to the KeepRoute node
+                    new_node->route = &(current_route->route);
+                    new_node->route_two = &(layover_route->route);
+                    new_node->route_three = NULL;
+
+                    // Add the route to the top of the existing stack
+                    new_node->next_route = *top_stack;
+                    *top_stack = new_node;
                 }
                 layover_route = layover_route->next_route;
             }
@@ -518,8 +560,7 @@ void find_routes_one_layover(StackRoute *routes, const char *departure, const ch
 }
 
 
-// Function to find routes with two layover
-void find_routes_two_layover(StackRoute *routes, const char *departure, const char *destination) {
+void find_routes_two_layover(StackRoute *routes, const char *departure, const char *destination, KeepRoute **top_stack) {
 
     StackRoute *current_route = routes;
 
@@ -542,7 +583,20 @@ void find_routes_two_layover(StackRoute *routes, const char *departure, const ch
                         //Find the thrird flight that departure from where the second one lands and that arrive at the final destination
                         if(strcmp(layover_route_two->route.IATA_source, layover_route_one->route.IATA_destiny) && strcmp(layover_route_two->route.IATA_destiny, destination)){
                         
-                        //Save the layover_route_two(Third flight), the layover_roure_one(Second flight) and the current_route(First flight)
+                            KeepRoute *new_node = (KeepRoute *)malloc(sizeof(KeepRoute));
+                            if (new_node == NULL) {
+                                fprintf(stderr, "Memory allocation failed while finding routes...\n");
+                                exit(1);
+                            }
+
+                            new_node->route = &(current_route->route);
+                            new_node->route_two = &(layover_route_one->route);
+                            new_node->route_three = &(layover_route_two->route);
+
+                            // Add the route to the top of the existing stack   
+                            new_node->next_route = *top_stack;
+                            *top_stack = new_node;
+
 
                         }
                       layover_route_two = layover_route_two->next_route;  
@@ -559,8 +613,88 @@ void find_routes_two_layover(StackRoute *routes, const char *departure, const ch
 
 
 
+//Show KeepStack Functions
+
+void show_keep_route(KeepRoute *top_route) {
+    //Creating a pointer that moves through the stack of routes
+    KeepRoute *current_route = top_route;
+
+    while(current_route != NULL){
+        
+        int count = 0;
+
+        if(current_route->route != NULL){
+
+        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", current_route->route->tripcode, current_route->route->departure_time, current_route->route->IATA_source, current_route->route->IATA_destiny, current_route->route->arrival_time, current_route->route->distance, current_route->route->airline);
+
+        } 
 
 
+        
 
+        current_route = current_route->next_route; //Move to the next route
+    }
+}
+
+void show_keep_route_one_layover(KeepRoute *top_route) {
+    
+    //Creating a pointer that moves through the stack of routes
+    KeepRoute *current_route = top_route;
+
+    while(current_route != NULL){
+        
+        int count = 0;
+
+        if(current_route->route != NULL){
+
+        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", current_route->route->tripcode, current_route->route->departure_time, current_route->route->IATA_source, current_route->route->IATA_destiny, current_route->route->arrival_time, current_route->route->distance, current_route->route->airline);
+
+        } 
+
+        if(current_route->route_two != NULL){
+
+        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", current_route->route_two->tripcode, current_route->route_two->departure_time, current_route->route_two->IATA_source, current_route->route_two->IATA_destiny, current_route->route_two->arrival_time, current_route->route_two->distance, current_route->route_two->airline);
+
+        } 
+
+        current_route = current_route->next_route; //Move to the next route
+    }
+}
+
+void show_keep_route_two_layover(KeepRoute *top_route) {
+    
+    //Creating a pointer that moves through the stack of routes
+    KeepRoute *current_route = top_route;
+
+    while(current_route != NULL){
+        
+        int count = 0;
+
+        if(current_route->route != NULL){
+
+        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", current_route->route->tripcode, current_route->route->departure_time, current_route->route->IATA_source, current_route->route->IATA_destiny, current_route->route->arrival_time, current_route->route->distance, current_route->route->airline);
+
+        } 
+
+        if(current_route->route_two != NULL){
+
+        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", current_route->route_two->tripcode, current_route->route_two->departure_time, current_route->route_two->IATA_source, current_route->route_two->IATA_destiny, current_route->route_two->arrival_time, current_route->route_two->distance, current_route->route_two->airline);
+
+        } 
+
+        if(current_route->route_three != NULL){
+
+        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", current_route->route_three->tripcode, current_route->route_three->departure_time, current_route->route_three->IATA_source, current_route->route_three->IATA_destiny, current_route->route_three->arrival_time, current_route->route_three->distance, current_route->route_three->airline);
+
+        } 
+
+        current_route = current_route->next_route; //Move to the next route
+    }
+}
+
+void show_individual_route(Route *route) {
+    
+    printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", route->tripcode, route->departure_time, route->IATA_source, route->IATA_destiny, route->arrival_time, route->distance, route->airline);
+}
 
 

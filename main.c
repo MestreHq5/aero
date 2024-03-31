@@ -96,9 +96,17 @@ void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *r
 
     layovers = layover_number(argv[4]); //will validate the layover number
 
-    if (argc == 5 && layovers == 0){
-        list_direct_flights(airports, routes, airport_source, airport_destiny, -1); //will list all the direct flights (no sort)
-    }
+    if (argc == 5){
+        if (layovers == 0){
+            list_direct_flights(airports, routes, airport_source, airport_destiny, -1); //will list all the direct flights (no sort)
 
+        } else if(layovers == 1){
+            list_one_layover(airports, routes, airport_source, airport_destiny, -1); //One layover (no sort)
+
+        }else{
+            list_two_layovers(airports, routes, airport_source, airport_destiny, -1); //Two layovers (no sort)
+
+        }
+    }
 
 }
