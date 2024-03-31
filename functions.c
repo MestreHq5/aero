@@ -1,13 +1,14 @@
-#include "functions.h"
-#include "algorithms.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
+#include "functions.h"
+
+
 //Auxiliary Definitions
-#define EARTH_RADIUS 6371
-#define REAL_RADIUS 6381 // Earth radius + 10 km altitude
+#define EARTH_RADIUS 6371.0
+#define REAL_RADIUS 6381.0 // Earth radius + 10 km altitude
 #define DIM_COORD 15
 #define PI 3.1415926535
 #define LATITUDE 0 
@@ -18,78 +19,21 @@
 
 
 //General Functions
-void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes){
+
+int layover_number(char *option){
 
     //Variables
-    Airport *airport_source, *airport_destiny;
-    int layovers, time_option;
+    int layovers = atoi(option);
 
-    //Check if the number of arguments is correct
-    if (argc < 2 || argc == 3 || argc == 4) {
-        printf("Too few arguments: Execution failed...\n");
-        arguments_error();
-        return;
-    } else if (argc > 7){
-        printf("Too many arguments: Execution failed...\n");
-        arguments_error();
-        return;
-    }
-
-    //Check the second argument and divide the cases
-    if (strcmp(argv[1], "-voos") == 0){
-        show_routes(routes);
-        return;
-
-    } else if (strcmp(argv[1], "-aeroportos") == 0){
-        show_airports(airports);
-        return;
-    }
-
-    //Check if the second and third arguments are valid IATA codes
-    airport_source = find_airport_by_IATA(airports, argv[1]);
-    airport_destiny = find_airport_by_IATA(airports, argv[2]);
-
-    if (airport_source == NULL || airport_destiny == NULL){
-        printf("Invalid IATA code for the source or destiny airport or unformated: Execution failed...\n");
-        return;
-    }
-    
-    //Check if the fourth argument is a valid option
-    if (strcmp(argv[3], "-L") != 0){
-        printf("Invalid option to specify layovers: Execution failed...\n");
-        return;
-    }
-    
-
-    //Check the number of layovers
-    layovers = atoi(argv[4]);
+    //Check if the number of layovers is in the range 0-2
     if (layovers < 0 || layovers > 2){
         printf("Invalid number of layovers: Execution failed...\n");
         exit(1);
     }
 
-    if (layovers == 0){
-        list_direct_flights(airports, routes, airport_source, airport_destiny, 0);
-        return;
-    }
-    //Check if the time sorting option is valid
-    if (argc > 5){
-        time_option = time_sort_option(argv[5]);
-    } else {
-        //list_direct_flights(airports, routes, airport_source, airport_destiny, layovers, 0, 0);
-        return;
-    }
+    return layovers;
 
-    if (argc == 7){
-        if (strcmp(argv[6], "-D") != 0){
-            printf("Invalid option to sort by distance: Execution failed...\n");
-            exit(1);
-        }
-    }
-    return;
 }
-
-
 
 int time_sort_option(char *option){
 
@@ -156,7 +100,6 @@ StackAirport *init_airports(FILE *fpairports){
         n_conv = handle_airport_line(line, airport);
 
         if(n_conv != 12){
-            printf("Error reading line: %s\n", line);
             free(airport);
             free(new_airport_container);
             continue; //Skip the current iteration
@@ -183,9 +126,15 @@ int handle_airport_line(char *line, Airport *airport){
     //Reading the line and storing the data in the airport structure
     n_conv = sscanf(line, "%s %s %d %d %d %c %d %d %d %c %s %d", airport->ICAO, airport->IATA, &lat_deg, &lat_min, &lat_sec, &lat_dir, &lon_deg, &lon_min, &lon_sec, &lon_dir, airport->city, &airport->timezone);
 
+    //Necessary to avoid memory issues in the sprintf
+    if(n_conv != 12){
+        return n_conv;
+    }
+
     //Converting the coordinates to a unic string for latitude and a unic string for longitude
     sprintf(airport->latitude, "%d %d %d %c", lat_deg, lat_min, lat_sec, lat_dir);
     sprintf(airport->longitude, "%d %d %d %c", lon_deg, lon_min, lon_sec, lon_dir);
+
 
     return n_conv;
 }
@@ -316,7 +265,7 @@ char *find_airline(char *line, char *key_airline) {
     beginning_pointer += strlen(key_airline);
 
     //Copy the Ailine Name to a string
-    for (index = 0; (index < DIM_NAME) && (*beginning_pointer != ('\r' || '\n')); index++){
+    for (index = 0; (index < DIM_NAME) && (*beginning_pointer != '\r') && (*beginning_pointer != '\n'); index++){
 
         airline[index] = *beginning_pointer;
         beginning_pointer++;
@@ -354,7 +303,7 @@ float distance_airports(StackAirport *airports, Route* route){
 
     //Check if the IATA codes are valid
     if(airport_source == NULL || airport_destiny == NULL){
-        return -1; //Negative distance implies the airports were not found 
+        return -1.0; //Negative distance implies the airports were not found 
     }
 
     //Parse the strings to extract the coordinates in degrees, minutes and seconds and convert to degree
@@ -402,7 +351,7 @@ void coordinates_parser(Airport *airport, double coord_vector[2]){
 
 }
 
-void real_coordinates(double coord[2], double real_coord[3], float radius){
+void real_coordinates(double coord[3], double real_coord[3], float radius){
 
     //Calculate Coordinates (Origin --> Center of Earth)
     real_coord[X] = radius * cos(coord[LATITUDE]) * cos(coord[LONGITUDE]);
@@ -420,3 +369,198 @@ void free_routes(StackRoute *top_route) {
         current_route = next_route;
     }
 }
+
+
+//Algorithms Functions
+void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option) {
+    
+    //Create a stack of routes to keep (may be sorted or not ---> depends on time_sort_option)
+    KeepRoute *top = NULL;
+    top = (KeepRoute *)malloc(sizeof(KeepRoute));
+
+    if (top == NULL) {
+        printf("Memory allocation failed while finding routes...\n");
+        exit(1);
+    }
+
+    //Initialize the stack of keep routes
+    find_routes_no_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
+
+    //Check if sorted is needed
+    if (time_sort_option == -1) {
+        show_keep_route(top);
+    } else if( time_sort_option == 1){
+        insertion_sort_keep_route(&top);
+        show_keep_route(top);
+    }
+
+    free_keep_route(top);
+}
+
+void show_keep_route(KeepRoute *top_route) {
+    
+    //Creating a pointer that moves through the stack of routes
+    KeepRoute *current_route = top_route;
+
+    while(current_route != NULL){
+        
+        int count = 0;
+
+        if(current_route->route != NULL){
+
+        printf("Route: [%s] %s %s ---> %s %s [%.2f]km %s\n", current_route->route->tripcode, current_route->route->departure_time, current_route->route->IATA_source, current_route->route->IATA_destiny, current_route->route->arrival_time, current_route->route->distance, current_route->route->airline);
+
+        } 
+
+
+        
+
+        current_route = current_route->next_route; //Move to the next route
+    }
+}
+
+void find_routes_no_layover(StackRoute *routes, const char *airport_source, const char *airport_destiny, KeepRoute **top_stack) {
+    StackRoute *current = routes;
+
+    while (current != NULL) {
+        if (strcmp(current->route.IATA_source, airport_source) == 0 && strcmp(current->route.IATA_destiny, airport_destiny) == 0) {
+
+            // Allocate memory for a new KeepRoute node
+            KeepRoute *new_node = (KeepRoute *)malloc(sizeof(KeepRoute));
+            if (new_node == NULL) {
+                fprintf(stderr, "Memory allocation failed while finding routes...\n");
+                exit(1);
+            }
+
+            // Copy the contents of the current route into the newly allocated Route structure
+            new_node->route = &(current->route);
+
+
+            // Add the route to the top of the existing stack
+            new_node->next_route = *top_stack;
+            *top_stack = new_node;
+
+            //As layover is not needed, the other routes are NULL
+            new_node->route_two = NULL;
+            new_node->route_three = NULL;
+        }
+
+        // Move to the next route in the Global Stack of Routes
+        current = current->next_route;
+    }
+}
+
+//Free the memory allocated for the stack of routes
+void free_keep_route(KeepRoute *top_route){
+
+    while (top_route != NULL){
+        KeepRoute *temp = top_route;
+        top_route = top_route->next_route;
+        free(temp);
+    }
+}
+
+//Order the stack of routes by distance using Insertion Sort
+void insertion_sort_keep_route(KeepRoute **top){
+    
+    //Checks if the stack is empty or has only one element (already sorted)
+    if (*top == NULL || (*top)->next_route == NULL) {
+        return;
+    }
+
+    KeepRoute *sortedStack = NULL;
+    KeepRoute *current = *top;
+
+    while (current != NULL) {
+        KeepRoute *next = current->next_route;
+        if (sortedStack == NULL || sortedStack->route->distance >= current->route->distance) {
+            current->next_route = sortedStack;
+            sortedStack = current;
+        } else {
+            KeepRoute *ptr = sortedStack;
+            while (ptr->next_route != NULL && ptr->next_route->route->distance < current->route->distance) {
+                ptr = ptr->next_route;
+            }
+            current->next_route = ptr->next_route;
+            ptr->next_route = current;
+        }
+        current = next;
+    }
+
+    *top = sortedStack; // Update the top pointer to point to the sorted stack
+}
+
+// Function to find routes with one layover
+void find_routes_one_layover(StackRoute *routes, const char *departure, const char *destination) {
+
+    StackRoute *current_route = routes;
+
+    //Loop to find flights from the departure airport 
+    while (current_route != NULL) {
+        //Find a the first route that departures from the departure airport
+        if (strcmp(current_route->route.IATA_source, departure) == 0) {
+
+            StackRoute *layover_route = routes;
+
+            //Loop to find flights that departure from where the first flight lands and that land at the destination airport
+            while (layover_route != NULL) {
+                //Find the second route that departures from the airport that the first route lands on and that arrives on the destination airport
+                if (strcmp(layover_route->route.IATA_source, current_route->route.IATA_destiny) == 0 && strcmp(layover_route->route.IATA_destiny, destination) == 0) {
+                 
+                 //Save the layover_route(Second flight) and the current_route(First flight)
+            
+                }
+                layover_route = layover_route->next_route;
+            }
+        }
+        current_route = current_route->next_route;
+    }
+}
+
+
+// Function to find routes with two layover
+void find_routes_two_layover(StackRoute *routes, const char *departure, const char *destination) {
+
+    StackRoute *current_route = routes;
+
+    //Loop to find flights from the departure airport 
+    while (current_route != NULL) {
+        //Find a the first route that departures from the departure airport
+        if (strcmp(current_route->route.IATA_source, departure) == 0) {
+
+            StackRoute *layover_route_one = routes;
+            
+            //Loop to find flights that departure from where the first flight lands
+            while (layover_route_one != NULL) {
+                //Find the second route that departures from the airport that the first route lands  
+                if (strcmp(layover_route_one->route.IATA_source, current_route->route.IATA_destiny) == 0) {
+                 
+                    StackRoute *layover_route_two = routes;
+                    
+                    //Loop to find the flights that departure from where the second one lands and that arrive at the final destination
+                    while(layover_route_two != NULL){
+                        //Find the thrird flight that departure from where the second one lands and that arrive at the final destination
+                        if(strcmp(layover_route_two->route.IATA_source, layover_route_one->route.IATA_destiny) && strcmp(layover_route_two->route.IATA_destiny, destination)){
+                        
+                        //Save the layover_route_two(Third flight), the layover_roure_one(Second flight) and the current_route(First flight)
+
+                        }
+                      layover_route_two = layover_route_two->next_route;  
+                    }
+            
+                }
+                layover_route_one = layover_route_one->next_route;
+            }
+        }
+        current_route = current_route->next_route;
+    }
+}
+
+
+
+
+
+
+
+
+

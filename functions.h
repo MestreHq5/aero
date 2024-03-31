@@ -6,11 +6,13 @@
 
 //Auxialiary definitions
 #define DIM_NAME 40
-#define DIM_COORD 15
+#define DIM_COORD 20
 
 //Structures ***************
 
 //Airports Related
+
+/*Stack to store the information of each airport*/
 typedef struct airport {
     char ICAO[5];
     char IATA[4];
@@ -27,6 +29,8 @@ typedef struct stack_airport {
 } StackAirport;
 
 //Routes Related
+
+/*Stack to store the information of each route*/
 typedef struct route{
     char airline[DIM_NAME];
     char tripcode[10];
@@ -41,6 +45,14 @@ typedef struct stack_routes {
 } StackRoute;
 
 
+typedef struct keep_route{
+    Route *route, *route_two, *route_three;
+    struct keep_route *next_route;
+}KeepRoute;
+
+
+
+
 // Function prototypes
 
 //General Functions **********
@@ -49,10 +61,17 @@ typedef struct stack_routes {
 It list the order in which the user should input the data*/
 void arguments_error();
 
-/**/
-int arguments_number();
+/*Function to determine if the number of layovers is valid (0<L<2)
+If it is, it outputs the number of layovers,
+If  it's not it will print an error message and return 1*/
+int layover_number(char *option);
+
+/*It will open the file and read, write or append on it*/
 FILE *open_file(char *filename, char *mode);
-void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
+
+/*Function to analyse the sorting according to time, it inputs 
+It returns 0 to sort from the earliest flight to the latest flight
+It returns 1 to sort from the latest flight to the earliest flight*/
 int time_sort_option(char *option);
 
 
@@ -60,7 +79,6 @@ int time_sort_option(char *option);
 StackAirport *init_airports(FILE *fp);
 int handle_airport_line(char *line, Airport *airport);
 void show_airports(StackAirport *top_airport);
-char *find_airport(StackAirport *airport, const char *targetIATA);
 void free_airports(StackAirport *top_airport);
 Airport *find_airport_by_IATA(StackAirport *airport, const char *code_IATA);
 
@@ -76,10 +94,17 @@ float distance_airports(StackAirport *airports, Route* route);
 //Distance Functions **********
 void coordinates_parser(Airport *airport, double coord_vector[2]);
 void real_coordinates(double source_coord[3], double real_source_coord[3], float radius);
-char* find_lat_long(char *info);
-double* calculate_real_coordinates(double rad_lat, double rad_long);
-//float distance_airports(StackAirport *airport, char *IATA_source, char *IATA_destiny);
 
 
+
+//Algorithms Functions **********
+
+void insertion_sort_keep_route(KeepRoute **top_route);
+void free_keep_route(KeepRoute *top_route);
+void show_keep_route(KeepRoute *top_route);
+
+
+//List Functions **********
+void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option);
 
 #endif
