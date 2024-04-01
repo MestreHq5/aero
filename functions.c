@@ -9,7 +9,7 @@
 //Auxiliary Definitions
 #define EARTH_RADIUS 6371.0
 #define REAL_RADIUS 6381.0 // Earth radius + 10 km altitude
-#define DIM_COORD 15
+#define DIM_COORD 20
 #define PI 3.1415926535
 #define LATITUDE 0 
 #define LONGITUDE 1
@@ -41,7 +41,7 @@ int time_sort_option(char *option){
         return 1;
 
     } else if (strcmp(option, "-TD") == 0){
-        return 0;
+        return -1;
 
     } else {
         
@@ -74,7 +74,7 @@ FILE *open_file(char *filename, char *mode){
     FILE *file_pointer = fopen(filename, mode);
     
     if(filename == NULL){
-        printf("Error opening %d\n", filename);
+        printf("Error opening %s\n", filename);
         exit(1);
     }
 
@@ -92,9 +92,14 @@ StackAirport *init_airports(FILE *fpairports){
     while (fgets(line, 100, fpairports) != NULL){
         
         //Variables
+        int n_conv;
         StackAirport *new_airport_container = (StackAirport *)malloc(sizeof(StackAirport));
         Airport *airport = (Airport *)malloc(sizeof(Airport));
-        int n_conv;
+
+        if (new_airport_container == NULL || airport == NULL){
+            printf("Memory allocation failed while building Airports Stacks...\n");
+            exit(1);
+        }
 
         //Reading the line and storing the data in the airport structure
         n_conv = handle_airport_line(line, airport);
@@ -107,6 +112,7 @@ StackAirport *init_airports(FILE *fpairports){
 
         //Pushing the airport to the stack and updating the top
         new_airport_container->airport = *airport;
+        free(airport);
         new_airport_container->next_airport = top_airport;
         top_airport = new_airport_container;
 
@@ -186,7 +192,7 @@ StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
 
     //Variables
     StackRoute *top_route = NULL;
-    char line[100], current_airline[DIM_NAME] = "", *key_airline = "AIRLINE: ";
+    char line[100], *current_airline = NULL, *key_airline = "AIRLINE: ";
 
     while (fgets(line, 100, fproutes) != NULL){
 
@@ -196,18 +202,16 @@ StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
         } 
         
         //Check if the line contains the airline name
-        char *airline = find_airline(line, key_airline);
+        find_airline(line, key_airline, &current_airline);
 
-        if(airline != NULL){
-            strcpy(current_airline, airline);
-            continue; //Proceed to the next file line
-        } 
+        if (current_airline == NULL){
+            continue; //Skip the current iteration
+        }
 
         //Variables
         StackRoute *new_route_container = (StackRoute *)malloc(sizeof(StackRoute));
         Route *route = (Route *)malloc(sizeof(Route));
         int n_conv;
-
 
         //Reading the line and storing the data in the route structure
         n_conv = sscanf(line, "%s %s %s %s %s", route->tripcode, route->IATA_source, route->departure_time, route->IATA_destiny, route->arrival_time);
@@ -227,9 +231,15 @@ StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
 
         //Pushing the airport to the stack and updating the top
         new_route_container->route = *route;
+        free(route);
         new_route_container->next_route = top_route;
         top_route = new_route_container;
 
+    }
+
+    // Free the memory for current_airline because it will not be used anymore
+    if (current_airline != NULL) {
+        free(current_airline);
     }
 
     return top_route;
@@ -250,16 +260,21 @@ int line_is_empty(char *line){
     return 1; //The line is empty
 }
 
-char *find_airline(char *line, char *key_airline) {
+void find_airline(char *line, char *key_airline, char **airline) {
 
     int index;
-    char *airline = (char *)malloc(DIM_NAME * sizeof(char));
     char *beginning_pointer = strstr(line, key_airline);
     
-    // Check if the keyword is in the line or the allocation failed
-    if ((beginning_pointer == NULL) || airline == NULL){
-        return NULL;  
+    // Check if the keyword is in the line
+    if (beginning_pointer == NULL){
+        return;  // If keyword is not found, do not change airline
     }
+
+    // If keyword is found, free the old airline and allocate memory for the new one
+    if (*airline != NULL) {
+        free(*airline);
+    }
+    *airline = (char *)malloc(DIM_NAME * sizeof(char));
 
     //Advance to the final of the Keyword "AIRLINE:"
     beginning_pointer += strlen(key_airline);
@@ -267,15 +282,15 @@ char *find_airline(char *line, char *key_airline) {
     //Copy the Ailine Name to a string
     for (index = 0; (index < DIM_NAME) && (*beginning_pointer != '\r') && (*beginning_pointer != '\n'); index++){
 
-        airline[index] = *beginning_pointer;
+        (*airline)[index] = *beginning_pointer;
         beginning_pointer++;
     
     }
 
     //Teminate the string an return
-    airline[index] = '\0';
+    (*airline)[index] = '\0';
 
-    return airline;
+    return;
 }
 
 void show_routes(StackRoute *top_route){
@@ -326,6 +341,8 @@ float distance_airports(StackAirport *airports, Route* route){
     return angle_airports * EARTH_RADIUS;
 }
 
+
+//Distance Functions
 void coordinates_parser(Airport *airport, double coord_vector[2]){
 
     //Variables
@@ -360,37 +377,38 @@ void real_coordinates(double coord[2], double real_coord[3], float radius){
     
 }
 
-void free_routes(StackRoute *top_route) {
-    StackRoute *current_route = top_route;
 
-    while (current_route != NULL) {
-        StackRoute *next_route = current_route->next_route;
-        free(current_route);
-        current_route = next_route;
-    }
+//List Flights Functions
+void null_init_top(KeepRoute *top) {
+    
+    //Initialize the fields of top
+    top->route = NULL;
+    top->route_two = NULL;
+    top->route_three = NULL;
+    top->next_route = NULL;
 }
 
-
-//Algorithms Functions
 void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option) {
     
     //Create a stack of routes to keep (may be sorted or not ---> depends on time_sort_option)
-    KeepRoute *top = NULL;
-    top = (KeepRoute *)malloc(sizeof(KeepRoute));
+    KeepRoute *top = (KeepRoute *)malloc(sizeof(KeepRoute));
 
     if (top == NULL) {
         printf("Memory allocation failed while finding routes...\n");
         exit(1);
     }
 
+    //Initialize the fields of top
+    null_init_top(top);
+
     //Initialize the stack of keep routes
     find_routes_no_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
 
     //Check if sorted is needed
-    if (time_sort_option == -1) {
+    if (time_sort_option == 0) {
         show_keep_route(top);
-    } else if( time_sort_option == 1){
-        insertion_sort_keep_route(&top);
+    } else{
+        insertion_sort_keep_route(&top, time_sort_option);
         show_keep_route(top);
     }
 
@@ -412,10 +430,10 @@ void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airpo
     find_routes_one_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
 
     //Check if sorted is needed
-    if (time_sort_option == -1) {
+    if (time_sort_option == 0) {
         show_keep_route_one_layover(top);
-    } else if( time_sort_option == 1){
-        insertion_sort_keep_route(&top);
+    } else{
+        insertion_sort_keep_route(&top, time_sort_option);
         show_keep_route_one_layover(top);
     }
 
@@ -437,10 +455,10 @@ void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airp
     find_routes_two_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
 
     //Check if sorted is needed
-    if (time_sort_option == -1) {
+    if (time_sort_option == 0) {
         show_keep_route_two_layover(top);
-    } else if( time_sort_option == 1){
-        insertion_sort_keep_route(&top);
+    } else {
+        insertion_sort_keep_route(&top, time_sort_option);
         show_keep_route_two_layover(top);
     }
 
@@ -448,7 +466,7 @@ void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airp
 }
 
 
-//Free the memory allocated for the stack of routes
+//Free functions
 void free_keep_route(KeepRoute *top_route){
 
     while (top_route != NULL){
@@ -458,12 +476,36 @@ void free_keep_route(KeepRoute *top_route){
     }
 }
 
+void free_routes(StackRoute *top_route) {
+    StackRoute *current_route = top_route;
+
+    while (current_route != NULL) {
+        StackRoute *next_route = current_route->next_route;
+        free(current_route);
+        current_route = next_route;
+    }
+}
+
+float numeric_time(const char *time) {
+    //Variables
+    int hours, minutes;
+    float numeric_time;
+
+    //Extract the hours and minutes from the string
+    sscanf(time, "%d:%d", &hours, &minutes);
+
+    //Convert the time to a numeric value (algrebra in now valid in the if's)
+    numeric_time = hours + (minutes / 60.0);
+
+    return numeric_time;
+}
+
 //Algorithms Functions
-void insertion_sort_keep_route(KeepRoute **top){
+void insertion_sort_keep_route(KeepRoute **top, int tso) {
     
-    //Checks if the stack is empty or has only one element (already sorted)
+    //Check if the stack is empty or has only one element (already sorted)
     if (*top == NULL || (*top)->next_route == NULL) {
-        return;
+        return;  
     }
 
     KeepRoute *sortedStack = NULL;
@@ -471,12 +513,24 @@ void insertion_sort_keep_route(KeepRoute **top){
 
     while (current != NULL) {
         KeepRoute *next = current->next_route;
-        if (sortedStack == NULL || sortedStack->route->distance >= current->route->distance) {
+        float current_time;
+        
+        // Calculate the arrival time based on the layover numbers
+        if (current->route_three != NULL) {
+            current_time = numeric_time(current->route_three->arrival_time);
+        } else if (current->route_two != NULL) {
+            current_time = numeric_time(current->route_two->arrival_time);
+        } else {
+            current_time = numeric_time(current->route->arrival_time);
+        }
+
+        // Insertion Sort Algorithm
+        if (sortedStack == NULL || tso * (numeric_time(sortedStack->route->arrival_time)) >= tso * current_time) {
             current->next_route = sortedStack;
             sortedStack = current;
         } else {
             KeepRoute *ptr = sortedStack;
-            while (ptr->next_route != NULL && ptr->next_route->route->distance < current->route->distance) {
+            while (ptr->next_route != NULL && tso * (numeric_time(ptr->next_route->route->arrival_time)) < tso * current_time) {
                 ptr = ptr->next_route;
             }
             current->next_route = ptr->next_route;
@@ -485,7 +539,7 @@ void insertion_sort_keep_route(KeepRoute **top){
         current = next;
     }
 
-    *top = sortedStack; // Update the top pointer to point to the sorted stack
+    *top = sortedStack;  // Update the top pointer to point to the sorted stack
 }
 
 

@@ -23,12 +23,14 @@ int main(int argc, char *argv[]) {
     StackAirport *airports = init_airports(fpairports);
     StackRoute *routes = init_routes(fproutes, airports);
     
-    //Handling the arguments: This function will control all the execution of the program
-    handle_arguments(argc, argv, airports, routes);   
-    
     //Closing files
     fclose(fproutes);
     fclose(fpairports);
+
+
+    //Handling the arguments: This function will control all the execution of the program
+    handle_arguments(argc, argv, airports, routes);   
+    
 
     //Freeing the memory
     printf("\nFreeing memory...\n");
@@ -95,15 +97,43 @@ void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *r
 
     if (argc == 5){
         if (layovers == 0){
-            list_direct_flights(airports, routes, airport_source, airport_destiny, -1); //will list all the direct flights (no sort)
+            list_direct_flights(airports, routes, airport_source, airport_destiny, 0); //will list all the direct flights (no sort)
 
         } else if(layovers == 1){
-            list_one_layover(airports, routes, airport_source, airport_destiny, -1); //One layover (no sort)
+            list_one_layover(airports, routes, airport_source, airport_destiny, 0); //One layover (no sort)
 
         }else{
-            list_two_layovers(airports, routes, airport_source, airport_destiny, -1); //Two layovers (no sort)
+            list_two_layovers(airports, routes, airport_source, airport_destiny, 0); //Two layovers (no sort)
 
         }
     }
 
+    if (argc == 6){
+        
+        time_option = time_sort_option(argv[5]);
+        if (layovers == 0){
+            list_direct_flights(airports, routes, airport_source, airport_destiny, time_option); //List direct flights (sorted)
+
+        } else if(layovers == 1){
+            list_one_layover(airports, routes, airport_source, airport_destiny, time_option); //One layover (sorted)
+
+        }else{
+            list_two_layovers(airports, routes, airport_source, airport_destiny, time_option); //Two layovers (sorted)
+
+        }
+    }
+
+    if (argc == 7 && layovers > 0){
+        time_option = time_sort_option(argv[5]);
+        if (layovers == 0){
+            list_direct_flights(airports, routes, airport_source, airport_destiny, time_option); //List direct flights (sorted)
+
+        } else if(layovers == 1){
+            list_one_layover(airports, routes, airport_source, airport_destiny, time_option); //One layover (sorted)
+
+        }else{
+            list_two_layovers(airports, routes, airport_source, airport_destiny, time_option); //Two layovers (sorted)
+
+        }
+    }
 }

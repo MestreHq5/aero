@@ -20,7 +20,7 @@ clean:
 	@rm -f rotas2024 *.o
 
 valgrind: rotas2024
-	valgrind --leak-check=full --track-origins=yes ./rotas2024 LIS CDG -L 2
+	valgrind --leak-check=full --track-origins=yes ./rotas2024 LIS CDG -L 0
 
 
 

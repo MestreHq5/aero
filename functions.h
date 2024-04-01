@@ -110,9 +110,9 @@ Airport *find_airport_by_IATA(StackAirport *airport, const char *code_IATA);
 StackRoute *init_routes(FILE *fp, StackAirport *airports);
 
 /**/
-char *find_airline(char *line, char *key_airline);
+void find_airline(char *line, char *key_airline, char **airline);
 
-/**/
+/*Function to determine if a line is empty*/
 int line_is_empty(char *line);
 
 /**/
@@ -131,14 +131,52 @@ void coordinates_parser(Airport *airport, double coord_vector[2]);
 void real_coordinates(double source_coord[2], double real_source_coord[3], float radius);
 
 
-//Algorithms Functions **********
+//List Flights Functions**********
 
-/**/
-void insertion_sort_keep_route(KeepRoute **top_route);
+//Initializes the top of the stack fields with NULL
+void null_init_top(KeepRoute *top_stack);
+
+/*Function to list the routes with 0 layovers*/
+void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option);
+
+/*Function to list the routes with 1 layover*/
+void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option); 
+
+/*Function to list the routes with 2 layovers*/
+void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option);
+
+
+//Free Functions****************
 
 /**/
 void free_keep_route(KeepRoute *top_route);
 
+/**/
+void free_routes(StackRoute *top_route);
+
+
+//Algorithms Functions**********
+
+/**/
+void insertion_sort_keep_route(KeepRoute **top_route, int time_sort_option);
+
+float numeric_time(const char *time);
+
+
+
+//Functions to find routes with 0-2 layovers**********
+
+/*Find routes with 0 layovers*/
+void find_routes_no_layover(StackRoute *routes, const char *airport_source, const char *airport_destiny, KeepRoute **top_stack);
+
+/*Find routes with 1 layover*/
+void find_routes_one_layover(StackRoute *routes, const char *departure, const char *destination, KeepRoute **top_stack);
+
+/*Find routes with 2 layovers*/
+void find_routes_two_layover(StackRoute *routes, const char *departure, const char *destination, KeepRoute **top_stack);
+
+
+//Show KeepStack Functions****************
 /**/
 void show_keep_route(KeepRoute *top_route);
 
@@ -146,13 +184,9 @@ void show_keep_route(KeepRoute *top_route);
 void show_keep_route_one_layover(KeepRoute *top_route);
 
 /**/
+void show_keep_route_two_layover(KeepRoute *top_route);
+
+/**/
 void show_individual_route(Route *route);
-
-
-
-//List Functions **********
-
-/*Searches flights, sorts them and prints them*/
-void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option);
 
 #endif
