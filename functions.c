@@ -188,6 +188,19 @@ void free_airports(StackAirport *top_airport){
 
 
 //Routes Functions
+void null_init_route(Route *route){
+
+    //Initialize the fields of the route to NULL (or equivalent 0.0 for floats or '\0' for strings)
+    route->tripcode[0] = '\0';
+    route->IATA_source[0] = '\0';
+    route->departure_time[0] = '\0';
+    route->IATA_destiny[0] = '\0';
+    route->arrival_time[0] = '\0';
+    route->distance = 0.0;
+    route->airline[0] = '\0';
+
+}
+
 StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
 
     //Variables
@@ -212,6 +225,14 @@ StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
         StackRoute *new_route_container = (StackRoute *)malloc(sizeof(StackRoute));
         Route *route = (Route *)malloc(sizeof(Route));
         int n_conv;
+
+        if (new_route_container == NULL || route == NULL){
+            printf("Memory allocation failed while building Routes Stacks...\n");
+            exit(1);
+        }
+
+        //Initialize the fields of the route to NULL (or equivalent 0.0 for floats or '\0' for strings)
+        null_init_route(route);
 
         //Reading the line and storing the data in the route structure
         n_conv = sscanf(line, "%s %s %s %s %s", route->tripcode, route->IATA_source, route->departure_time, route->IATA_destiny, route->arrival_time);
