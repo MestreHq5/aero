@@ -511,8 +511,11 @@ void free_routes(StackRoute *top_route) {
     }
 }
 
-float numeric_time(const char *time) {
+float numeric_time(char *time) {
     //Variables
+    time[strlen(time)] = '\0'; 
+    
+
     int hours, minutes;
     float numeric_time;
 

@@ -160,7 +160,7 @@ void free_routes(StackRoute *top_route);
 /**/
 void insertion_sort_keep_route(KeepRoute **top_route, int time_sort_option);
 
-float numeric_time(const char *time);
+float numeric_time(char *time);
 
 
 

@@ -12,5 +12,6 @@
    -init airports
    -init routes 
 
+4. manage routes
 
 
