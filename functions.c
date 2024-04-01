@@ -439,13 +439,15 @@ void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *ai
 void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option) {
     
     //Create a stack of routes to keep (may be sorted or not ---> depends on time_sort_option)
-    KeepRoute *top = NULL;
-    top = (KeepRoute *)malloc(sizeof(KeepRoute));
+    KeepRoute *top = (KeepRoute *)malloc(sizeof(KeepRoute));
 
     if (top == NULL) {
         printf("Memory allocation failed while finding routes...\n");
         exit(1);
     }
+
+    //Initialize the fields of top
+    null_init_top(top);
 
     //Initialize the stack of keep routes
     find_routes_one_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
@@ -464,13 +466,15 @@ void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airpo
 void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option) {
     
     //Create a stack of routes to keep (may be sorted or not ---> depends on time_sort_option)
-    KeepRoute *top = NULL;
-    top = (KeepRoute *)malloc(sizeof(KeepRoute));
+    KeepRoute *top = (KeepRoute *)malloc(sizeof(KeepRoute));
 
     if (top == NULL) {
         printf("Memory allocation failed while finding routes...\n");
         exit(1);
     }
+
+    //Initialize the fields of top
+    null_init_top(top);
 
     //Initialize the stack of keep routes
     find_routes_two_layover(routes, airport_source->IATA, airport_destiny->IATA, &top);
