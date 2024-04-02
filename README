@@ -1,0 +1,55 @@
+# Air Route Handling in C
+
+This project is inserted in the class "Introduction to Programming in C" in the course of Aerospace Engineering in "Instituto Superior Técnico" (IST).
+
+## Table of Contents
+
+- [Elements](#elements)
+- [Usage](#usage)
+- [Developers](#developers)
+
+
+## Elements
+
+The project is divided in the following way: 
+
+    -Folder 'IN_FILES' stands for "Input Files" : local where the files 'aeroportos.txt' and 'rotas.txt' should be. Those files should be formated in a way hte program can read them. Otherwise it will raise an error message in most cases but continue the execution of the program (if not a fatal error --> exit(1)) 
+    
+    - functions.h : file with all the protothypes of the functions used. It also includes an explanation for every function in the form "brief ... param ... return". 
+
+    -function.c main.c : declaration and implementation of the functions in functions.h
+
+    -Makefile : used for a faster compiling and the debug of memory leaks and other errors using 'Valgrind' with the FLAGS --leak-check=full and --track-origins=yes. The executable name is already defined there as "rotas2024"
+
+
+## Usage
+
+"Na definição inicial das funcionalidades de uma aplicação, existem elementos que não estão completamente especificados. Nessas situações, o programador pode especificar os elementos em falta utilizando para o efeito justificações lógicas" 
+
+    The list below explain the commands for this aplication:
+    ./rotas2024 LIS FCO -L 2 -TD -D
+          ^      ^   ^   ^ ^  ^   ^
+          |      |   |   | |  |   |
+          1      2   3   4 5  6   7
+    
+    1. executable file
+    2. IATA of Airport of departure (source or A)
+    3. IATA of Airport of arrival (destination or B)
+    4. -L: Indication of the possibility of Layovers
+    5. 0-2: Numbers of layovers
+    6. -TD or -TC: Sort by departure time
+    7. -D: Sort by travelled distance
+
+
+If some of the commands are wrong the program will raise an error and display the list above.
+
+If the argument -D is used and since distance has priority over time, then this console aplication will only show the trips (group of 1 up to 3 routes) with the lesser distance --> the trip shown would be just one or a few but the same type (with the same scales but by different airlines at different times). To use '-D', the time sorting option is also required.
+
+## Developers
+
+The project was developed by:
+
+Gonçalo Rodrigues ist1109887
+Nicolau Conim ist1109756
+
+

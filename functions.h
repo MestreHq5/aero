@@ -68,7 +68,7 @@ typedef struct keep_route{
 void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
 
 /*
- * brief: This function detects the number of layovers that the user is asking for and provides the list of routes possible, accordingly filtered and sorted.
+ * brief: This function serves as the entry point for managing routes based on command-line arguments. 
  * param: int argc: Represents the number of command-line arguments.
  * param: char *argv[]: An array of strings containing the actual command-line arguments.
  * param: StackAirport *airports: A pointer to the stack containing the airports.
@@ -77,11 +77,14 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
  */
 void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
 
-
-
-
-
-
+/*
+ * brief: This function serves as the entry point for managing routes based on command-line arguments. 
+ * param: int argc: Represents the number of command-line arguments.
+ * param: char *argv[]: An array of strings containing the actual command-line arguments.
+ * param: StackAirport *airports: A pointer to the stack containing the airports.
+ * param: StackRoutes *routes: A pointer to the stack containing the routes.
+ * return: void
+ */
 void separate_cases_by_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int layover_and_sort[3]);
 
 
@@ -115,12 +118,23 @@ FILE *open_file(char *filename, char *mode);
  * param: char *option: A pointer to a string representing the number of layovers.
  * return: It returns 1 if -TC is inputed
            It returns -1 if -TD is inputed
-           It stops the program  and prints an error message if neither -TC nor -TD is inputed
+           It stops the program and prints an error message if neither -TC nor -TD is inputed
  */
 int time_sort_option(char *option);
 
+/*
+ * brief: Function that interprets the user-provided sorting option for distance and validate its correctness.
+ * param: char *option: A pointer to a string representing the sorting option for distance.
+ * return: It returns 1 if the option is -D.
+           It stops the program and prints an error message if the option in not -D.
+ */
 int distance_sort_option(char *option);
 
+/*
+ * brief: Function that converts a time string in the format "HH:MM" to a numeric representation.
+ * param: char *time: A pointer to the string representing the time in the format "HH:MM".
+ * return: It returns the time as a float number
+ */
 float numeric_time(char *time);
 
 
@@ -300,10 +314,21 @@ void free_routes(StackRoute *top_route);
 
 //Algorithms Functions**********
 
-/**/
+/*
+ * brief: Function that sorts a stack of KeepRoute structures based on departure and arrival times. 
+ * param: KeepRoute **top_route: A pointer to a pointer to the top of the stack of KeepRoute structures.
+ * param: int tso: A multiplier to determine the sorting order based on time.
+ * return: void.
+ */
 void bubble_sort_keep_route(KeepRoute **top_route, int tso);
 
-void swap(KeepRoute *a, KeepRoute *b);
+/*
+ * brief: Function that swaps the contents of two KeepRoute structures, effectively exchanging the flight routes they represent. 
+ * param: KeepRoute *route_a: A pointer to the first KeepRoute structure to be swapped.
+ * param: KeepRoute *route_b: A pointer to the second KeepRoute structure to be swapped.
+ * return: void.
+ */
+void swap(KeepRoute *route_a, KeepRoute *route_b);
 
 /*
  * brief: Function that provides a convenient way to retrieve the departure time of the first flight in a trip represented by a KeepRoute structure.
@@ -322,10 +347,25 @@ float get_arrival_time(KeepRoute *node);
 
 //Distance Sort Functions**********
 
-float get_lesser_distance(KeepRoute *top);
+/*
+ * brief: Function that finds the shortest total distance among all trips stored in a stack of KeepRoute structures. 
+ * param: KeepRoute *top: A pointer to the top of the stack of KeepRoute structures.
+ * return: It returns the shortest distance
+ */
+float get_shortest_distance(KeepRoute *top);
 
+/*
+ * brief: Function that drops trips from the stack of KeepRoute structures that have a total distance greater than the shortest distance among all trips. 
+ * param: KeepRoute **top: A pointer to a pointer to the top of the stack of KeepRoute structures.
+ * return: void
+ */
 void drop_long_trips(KeepRoute **top);
 
+/*
+ * brief: Function that calculate the total distance covered in a trip represented by a KeepRoute structure. 
+ * param: KeepRoute *trip: A pointer to a KeepRoute structure representing a trip.
+ * return: It return the total disatnce traveled.
+ */
 float sum_trip_distances(KeepRoute *trip);
 
 
@@ -364,25 +404,50 @@ void find_routes_two_layover(StackRoute *routes, const char *departure, const ch
 
 //Connecting Flights Concern*************
 
-/**/
+/*
+ * brief: Function that drops trips from the stack of KeepRoute structures if there are concerns with the connecting flights. 
+ * param: KeepRoute **top: A pointer to a pointer to the top of the stack of KeepRoute structures.
+ * return: void
+ */
 void drop_connecting_concern(KeepRoute **top);
 
-/**/
+/*
+ * brief: Function that removes a specific trip from the stack of KeepRoute structures.
+ * param: KeepRoute **top: A pointer to a pointer to the top of the stack of KeepRoute structures.
+ * param: KeepRoute *trip_to_remove: A pointer to the specific trip that needs to be removed from the stack.
+ * return: void
+ */
 void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove);
 
 
 //Show KeepStack Functions****************
 
-/**/
+/*
+ * brief: Function that visually presents the trips stored in the stack of KeepRoute structures. 
+ * param: KeepRoute *top_route: A pointer to the top of the stack of KeepRoute structures.
+ * return: void
+ */
 void show_keep_route(KeepRoute *top_route);
 
-/**/
+/*
+ * brief: Function that visually presents the trips with one layover in a clear and organized manner. 
+ * param: KeepRoute *top_route: A pointer to the top of the stack of KeepRoute structures.
+ * return: void
+ */
 void show_keep_route_one_layover(KeepRoute *top_route);
 
-/**/
+/*
+ * brief: Function that visually presents the trips with two layovers in a clear and organized manner. 
+ * param: KeepRoute *top_route: A pointer to the top of the stack of KeepRoute structures.
+ * return: void
+ */
 void show_keep_route_two_layover(KeepRoute *top_route);
 
-/**/
+/*
+ * brief: Function that visually presents the details of an individual route. 
+ * param: KeepRoute *top_route: A pointer to the top of the stack of KeepRoute structures.
+ * return: void
+ */
 void show_individual_route(Route *route);
 
 #endif

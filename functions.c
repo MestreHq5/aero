@@ -68,7 +68,6 @@ int distance_sort_option(char *option){
 }
 
 void arguments_error() {
-    printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
     printf("\nThe list below explain the commands for this aplication:\n");
     printf("\n./rotas2024 LIS FCO -L 2 -TD -D");
     printf("\n      ^      ^   ^   ^ ^  ^   ^");
@@ -81,8 +80,7 @@ void arguments_error() {
     printf("\n5. 0-2: Numbers of layovers");
     printf("\n6. -TD or -TC: Sort by departure time ()");
     printf("\n7. -D: Sort by travelled distance");
-    printf("\n\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-    printf("\n");
+    printf("\n\n");
 }
 
 FILE *open_file(char *filename, char *mode){
@@ -601,6 +599,7 @@ void bubble_sort_keep_route(KeepRoute **top, int tso) {
     
     // Check if the stack is empty or has only one element (already sorted)
     if (*top == NULL || (*top)->next_route == NULL) {
+        printf("No routes found...\n");
         return;  
     }
 
@@ -673,10 +672,10 @@ float sum_trip_distances(KeepRoute *trip){
     return sum;
 }
 
-float get_lesser_distance(KeepRoute *top){
+float get_shortest_distance(KeepRoute *top){
     //Variables
     KeepRoute *current = top;
-    float lesser_distance = FLT_MAX; // Initialize lesser_distance to the maximum finite float value
+    float shortest_distance = FLT_MAX; // Initialize shortest_distance to the maximum finite float value
     float current_distance;
 
     while (current != NULL) {
@@ -690,22 +689,22 @@ float get_lesser_distance(KeepRoute *top){
             continue;
         } 
 
-        //Update the lesser distance if the current distance is lesser
-        if (current_distance < lesser_distance) {
-            lesser_distance = current_distance;
+        //Update the shortest distance if the current distance is shortest
+        if (current_distance < shortest_distance) {
+            shortest_distance = current_distance;
         }
 
         current = current->next_route;
 
     }
 
-    return lesser_distance;
+    return shortest_distance;
 }
 
 void drop_long_trips(KeepRoute **top) {
     KeepRoute *current = *top;
     KeepRoute *prev = NULL;
-    float lesser_distance = get_lesser_distance(*top);
+    float shortest_distance = get_shortest_distance(*top);
 
     while (current != NULL) {
         // Check if current->route is NULL before accessing its distance
@@ -720,8 +719,8 @@ void drop_long_trips(KeepRoute **top) {
                                  + (current->route_two != NULL ? current->route_two->distance : 0) 
                                  + (current->route_three != NULL ? current->route_three->distance : 0);
 
-        // Drop the trip if the distance is greater than the lesser distance
-        if (current_distance > lesser_distance) {
+        // Drop the trip if the distance is greater than the shortest distance
+        if (current_distance > shortest_distance) {
             KeepRoute *temp = current;
             if (prev != NULL) {
                 prev->next_route = current->next_route;
@@ -935,6 +934,11 @@ void show_keep_route(KeepRoute *top_route) {
     KeepRoute *current_route = top_route; //Creating a pointer that moves through the stack of routes
     int count = 1;
 
+    if (current_route == NULL){
+        printf("No routes found...\n");
+        return;
+    }
+
     while(current_route != NULL){
         
 
@@ -953,6 +957,11 @@ void show_keep_route_one_layover(KeepRoute *top_route) {
     //Variables
     KeepRoute *current_route = top_route; //Creating a pointer that moves through the stack of routes
     int count = 1;
+
+    if (current_route == NULL){
+        printf("No routes found...\n");
+        return;
+    }
 
     while(current_route != NULL){
         
@@ -979,6 +988,11 @@ void show_keep_route_two_layover(KeepRoute *top_route) {
     //Variables
     KeepRoute *current_route = top_route; //Creating a pointer that moves through the stack of routes
     int count = 1;
+
+    if (current_route == NULL){
+        printf("No routes found...\n");
+        return;
+    }
 
     while(current_route != NULL){
         
@@ -1010,5 +1024,3 @@ void show_individual_route(Route *route) {
     
     printf("Flight : [%s] %s %s ---> %s %s [%.2f]km %s\n", route->tripcode, route->departure_time, route->IATA_source, route->IATA_destiny, route->arrival_time, route->distance, route->airline);
 }
-
-

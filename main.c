@@ -10,19 +10,16 @@
 #define TIME_OPTION 1
 #define DISTANCE_OPTION 2
 
-//Function Prototypes
-void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
-void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
 
-
+//Functions
 
 int main(int argc, char *argv[]) {
 
     printf("\n"); // This line separates the terminal commands to the output of the program
 
     //Opening files (If an error occurs, the program will stop running and exit with code 1)
-    FILE *fproutes = open_file("rotas.txt", "r");
-    FILE *fpairports = open_file("aeroportos.txt", "r");
+    FILE *fproutes = open_file("IN_FILES/rotas.txt", "r");
+    FILE *fpairports = open_file("IN_FILES/aeroportos.txt", "r");
 
     //Reading the files and initializing the structures
     StackAirport *airports = init_airports(fpairports);
