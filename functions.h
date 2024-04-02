@@ -179,18 +179,42 @@ Airport *find_airport_by_IATA(StackAirport *airport, const char *code_IATA);
  */
 StackRoute *init_routes(FILE *fp, StackAirport *airports);
 
-/**/
+/*
+ * brief: Function that extracts the airline name from a line of text based on a specific keyword.
+ * param: char *line: A pointer to a string containing the airline name.
+ * param: char *key_airline: A pointer to a string containing the keyword that marks the beginning of the airline name.
+ * param: char **airline: A pointer to a pointer to a string where the extracted airline name will be stored.
+ * return: void.
+ */
 void find_airline(char *line, char *key_airline, char **airline);
 
-/*Function to determine if a line is empty*/
+/*
+ * brief: Function to determine if a line is empty.
+ * param: char *line: A pointer to a string containing a line.
+ * return: It returns 1 if the line is empty and returns 0 if it's not.
+ */
 int line_is_empty(char *line);
 
-/**/
+/*
+ * brief: Function that deallocates the memory allocated for the stack of routes.
+ * param: StackRoutes *top_route: A pointer to the top of the stack of routes.
+ * return: void
+ */
 void free_routes(StackRoute *top_route);
 
-/*Receives the stack of airports and the route and it calculates the route's distance*/
+/*
+ * brief: Receives the stack of airports and the route and it calculates the route's distance.
+ * param: StackAirport *airports: A pointer to the top of the stack of airports.
+ * param: Route* route: A pointer to a specific route
+ * return: It returns the distance in between the two aiports.
+ */
 float distance_airports(StackAirport *airports, Route* route);
 
+/*
+ * brief: Function that prints all of the routes in the routes stack.
+ * param: StackRoute *top_route: A pointer to the top of the stack of routes.
+ * return: void
+ */
 void show_routes(StackRoute *top_route);
 
 
@@ -199,7 +223,13 @@ void show_routes(StackRoute *top_route);
 /**/
 void coordinates_parser(Airport *airport, double coord_vector[2]);
 
-/*Converts the coordinates from latitude and longitude to X,Y and Z*/
+/*
+ * brief: Converts the coordinates from latitude and longitude to X,Y and Z.
+ * param: double source_coord[2]: An array with the latitude and longitude of an airport.
+ * param: double real_source_coord[3]: An array with the x,y and z coordinates of that airport.
+ * param: float radius: The radius of the earth plus the altitude that the plane flies at.
+ * return: void
+ */
 void real_coordinates(double source_coord[2], double real_source_coord[3], float radius);
 
 
@@ -210,6 +240,7 @@ void null_init_top(KeepRoute *top_stack);
 
 /*Function to list the routes with 0 layovers*/
 void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int *time_and_distance);
+
 /*Function to list the routes with 1 layover*/
 void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int *time_and_distance); 
 
@@ -241,7 +272,7 @@ float numeric_time(char *time);
 
 void drop_connecting_concern(KeepRoute **top);
 
-void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove); //remove a trip from the stack that is causing problems in the insert sort
+void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove); //remove a trip from the stack that is causing problems in the sorting
 
 //Distance Sort Functions**********
 

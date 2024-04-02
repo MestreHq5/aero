@@ -651,30 +651,53 @@ void swap(KeepRoute *route_a, KeepRoute *route_b) {
 
 
 //Sort by Distance Functions
+float sum_trip_distances(KeepRoute *trip){
+
+    //Variables
+    float sum = 0.0;
+
+    //Sum the distances of the flights
+    if (trip->route != NULL) {
+        sum += trip->route->distance;
+    }
+
+    if (trip->route_two != NULL) {
+        sum += trip->route_two->distance;
+    }
+
+    if (trip->route_three != NULL) {
+        sum += trip->route_three->distance;
+    }
+
+    return sum;
+}
+
 float get_lesser_distance(KeepRoute *top){
     //Variables
     KeepRoute *current = top;
-    float lesser_distance = FLT_MAX; // Initialize lesser_distance to a large value
+    float lesser_distance = FLT_MAX; // Initialize lesser_distance to the maximum finite float value
     float current_distance;
 
     while (current != NULL) {
-        // Get the distance of the trip
-        float route_distance = 0;
-        if (current->route != NULL) {
-            route_distance += current->route->distance;
-        }
-        if (current->route_two != NULL) {
-            route_distance += current->route_two->distance;
-        }
-        if (current->route_three != NULL) {
-            route_distance += current->route_three->distance;
+        
+        //Distance of the current trip
+        current_distance = sum_trip_distances(current);
+
+        //Avoid Errors in sorting remove the trip with the distance 0
+        if (current_distance == 0.0){
+            remove_trip(&top, current);
+            current = current->next_route;
+            continue;
+        } 
+
+        //Update the lesser distance if the current distance is lesser
+        if (current_distance < lesser_distance) {
+            lesser_distance = current_distance;
         }
 
-        if (route_distance < lesser_distance) {
-            lesser_distance = route_distance;
-        }
-
+        printf("Currente Distance [%f]   Lesser Distance [%f] \n", current_distance, lesser_distance);
         current = current->next_route;
+
     }
 
     return lesser_distance;
@@ -685,7 +708,16 @@ void drop_long_trips(KeepRoute **top) {
     KeepRoute *prev = NULL;
     float lesser_distance = get_lesser_distance(*top);
 
-    while (current->next_route != NULL) {
+    printf("lesser_distance: %f\n", lesser_distance);
+
+    while (current != NULL) {
+        // Check if current->route is NULL before accessing its distance
+        if (current->route == NULL) {
+            // Handle the error here, perhaps by skipping this iteration of the loop
+            current = current->next_route;
+            continue;
+        }
+
         // Get the distance of the current trip
         float current_distance = current->route->distance 
                                  + (current->route_two != NULL ? current->route_two->distance : 0) 
@@ -707,6 +739,7 @@ void drop_long_trips(KeepRoute **top) {
         }
     }
 }
+
 
 
 // Functions to find routes with 0-2 layovers
