@@ -235,7 +235,7 @@ StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
         null_init_route(route);
 
         //Reading the line and storing the data in the route structure
-        n_conv = sscanf(line, "%s %s %s %s %s", route->tripcode, route->IATA_source, route->departure_time, route->IATA_destiny, route->arrival_time);
+        n_conv = sscanf(line, "%5s %3s %5s %3s %5s", route->tripcode, route->IATA_source, route->departure_time, route->IATA_destiny, route->arrival_time);
 
         //Calculating the distance between the airports
         route->distance = distance_airports(airports, route);
@@ -512,15 +512,13 @@ void free_routes(StackRoute *top_route) {
 }
 
 float numeric_time(char *time) {
-    //Variables
-    time[strlen(time)] = '\0'; 
     
-
+    //Variables
     int hours, minutes;
     float numeric_time;
 
     //Extract the hours and minutes from the string
-    sscanf(time, "%d:%d", &hours, &minutes);
+    sscanf(time, "%2d:%2d", &hours, &minutes);
 
     //Convert the time to a numeric value (algrebra in now valid in the if's)
     numeric_time = hours + (minutes / 60.0);

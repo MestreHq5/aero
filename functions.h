@@ -34,8 +34,8 @@ typedef struct stack_airport {
 typedef struct route{
     char airline[DIM_NAME];
     char tripcode[10];
-    char IATA_source[4], IATA_destiny[4];
-    char departure_time[6], arrival_time[6];
+    char IATA_source[10], IATA_destiny[10];
+    char departure_time[10], arrival_time[10];
     float distance;
 } Route;
 
@@ -121,6 +121,8 @@ void free_routes(StackRoute *top_route);
 /*Receives the stack of airports and the route and it calculates the route's distance*/
 float distance_airports(StackAirport *airports, Route* route);
 
+void show_routes(StackRoute *top_route);
+
 
 //Distance Functions **********
 
@@ -161,6 +163,7 @@ void free_routes(StackRoute *top_route);
 void insertion_sort_keep_route(KeepRoute **top_route, int time_sort_option);
 
 float numeric_time(char *time);
+
 
 
 

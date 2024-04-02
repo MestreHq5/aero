@@ -41,7 +41,6 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-
 void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes){
 
     //Check if the number of arguments is correct
