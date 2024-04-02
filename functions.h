@@ -55,7 +55,7 @@ typedef struct keep_route{
 
 // Function prototypes
 
-//Main function *************
+//Main functions *************
 
 /*
  * brief: This function checks the arguments inputed and detects several errors of data placement as well as detect if the user is asking for the list of routes or airports.
@@ -78,11 +78,12 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
 void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
 
 /*
- * brief: This function serves as the entry point for managing routes based on command-line arguments. 
- * param: int argc: Represents the number of command-line arguments.
- * param: char *argv[]: An array of strings containing the actual command-line arguments.
+ * brief: This function categorizes and handles different scenarios based on the number of layovers specified in the input.
  * param: StackAirport *airports: A pointer to the stack containing the airports.
  * param: StackRoutes *routes: A pointer to the stack containing the routes.
+ * param: Airport *airport_source: A pointer to the source airport.
+ * param: Airport *airport_destiny: A pointer to the destiny airport.
+ * param: int layover_and_sort[3]: An array containing information about layover options and sorting preferences.
  * return: void
  */
 void separate_cases_by_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int layover_and_sort[3]);
@@ -105,7 +106,7 @@ void arguments_error();
 int layover_number(char *option);
 
 /*
- * brief: It will open the file and read, write or append on it
+ * brief: It will open the file on the selected mode
  * param: char *filename: A pointer to a string representing the name of the file
  * param: char *mode: A pointer to a string representing the mode in which the file should be opened
  * return: If the number of layovers is valid, it will return it, if not, it will end the program and print an error message
@@ -140,7 +141,6 @@ float numeric_time(char *time);
 
 //Aiports Functions **********
 
-
 /*
  * brief: Function that feeds the airports in the aeroportos.txt file into the airport stack.
  * param: File *fp: A pointer to the airports file.
@@ -163,8 +163,6 @@ int handle_airport_line(char *line, Airport *airport);
  * return: void
  */
 void show_airports(StackAirport *top_airport);
-
-
 
 /*
  * brief: Function that deallocates the memory allocated for the stack of airports.
@@ -232,7 +230,6 @@ void show_routes(StackRoute *top_route);
 
 
 //Distance Functions **********
-
 
 /*
  * brief: The purpose of this function is to parse latitude and longitude information stored in the Airport structure and convert it into decimal degree format, adjusted for the appropriate direction.

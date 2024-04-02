@@ -41,9 +41,9 @@ The project is divided in the following way:
     7. -D: Sort by travelled distance
 
 
-If some of the commands are wrong the program will raise an error and display the list above.
+If some of the commands are wrong the program will probably raise an error and display the list above.
 
-If the argument -D is used and since distance has priority over time, then this console aplication will only show the trips (group of 1 up to 3 routes) with the lesser distance --> the trip shown would be just one or a few but the same type (with the same scales but by different airlines at different times). To use '-D', the time sorting option is also required.
+If the argument -D is used and since distance has priority over time, then this console aplication will only show the trips (group of 1 up to 3 routes) with the lesser distance --> the trip shown would be just one or a few but of the same type (with the same scales but by different airlines at different times). To use '-D', the time sorting option is also required.
 
 ## Developers
 

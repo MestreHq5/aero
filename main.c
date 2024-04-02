@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     
 
     //Freeing the memory
-    printf("\nFreeing memory...\n");
+    printf("\nProgram executed --> Freeing memory...\n");
     
     free_airports(airports);
     free_routes(routes);
@@ -63,6 +63,11 @@ void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute
 
     } else if (strcmp(argv[1], "-aeroportos") == 0){
         show_airports(airports);
+        return;
+
+    }else if (argc == 2){
+        printf("Too few arguments: Execution failed...\n");
+        arguments_error();
         return;
     }
 

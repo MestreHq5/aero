@@ -272,7 +272,7 @@ StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
         route->distance = distance_airports(airports, route);
         
         //Check if the line is unformatted
-        if(n_conv != 5 || route->distance < 0){
+        if(n_conv != 5 || route->distance < 0 || strcmp(route->IATA_source, route->IATA_destiny) == 0){
             free(route);
             free(new_route_container);
             continue; //Skip the current iteration
