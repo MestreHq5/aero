@@ -450,7 +450,7 @@ void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *ai
     if (time_sort_option == 0) {
         show_keep_route(top);
     } else{
-        insertion_sort_keep_route(&top, time_sort_option);
+        insertion_sort_keep_route(&top);
         show_keep_route(top);
     }
 
@@ -477,7 +477,8 @@ void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airpo
     if (time_sort_option == 0) {
         show_keep_route_one_layover(top);
     } else{
-        insertion_sort_keep_route(&top, time_sort_option);
+        drop_connecting_concern(&top);
+        bubble_sort_keep_route(&top);
         show_keep_route_one_layover(top);
     }
 
@@ -504,7 +505,8 @@ void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airp
     if (time_sort_option == 0) {
         show_keep_route_two_layover(top);
     } else {
-        insertion_sort_keep_route(&top, time_sort_option);
+        drop_connecting_concern(&top);
+        bubble_sort_keep_route(&top);
         show_keep_route_two_layover(top);
     }
 
@@ -534,8 +536,7 @@ void free_routes(StackRoute *top_route) {
 
 
 //Algorithms Functions
-void insertion_sort_keep_route(KeepRoute **top, int tso) {
-    
+void insertion_sort_keep_route(KeepRoute **top) {
     if (*top == NULL || (*top)->next_route == NULL) {
         return;  // If the stack is empty or has only one element, it's already sorted
     }
@@ -545,33 +546,44 @@ void insertion_sort_keep_route(KeepRoute **top, int tso) {
 
     while (current != NULL) {
         KeepRoute *next = current->next_route;
+
+        // Get departure and arrival times for comparison
         float departure_time;
         float arrival_time;
-        
-        // Set the departure and arrival times for the current route
-        if (current->route != NULL) {
+
+        // For a trip with one flight
+        if (current->route_two == NULL && current->route_three == NULL && current->route != NULL) {
             departure_time = current->route->numeric_departure;
             arrival_time = current->route->numeric_arrival;
-        } else {
-            departure_time = FLT_MAX;  // Set to maximum float value for null routes
-            arrival_time = FLT_MIN;    // Set to minimum float value for null routes
         }
-
-        //update the arrival time if the trip has more than one route
-        if (current->route_two != NULL) {
+        // For a trip with one layover
+        else if (current->route_three == NULL && current->route != NULL && current->route_two != NULL) {
+            departure_time = current->route->numeric_departure;
             arrival_time = current->route_two->numeric_arrival;
         }
-        if (current->route_three != NULL) {
+        // For a trip with two layovers
+        else if (current->route != NULL && current->route_two != NULL && current->route_three != NULL) {
+            departure_time = current->route->numeric_departure;
             arrival_time = current->route_three->numeric_arrival;
+        } else {
+            // Handle case where routes are not properly initialized
+            // You may want to log an error or handle this case differently based on your application logic
+            remove_trip(top, current->route);
+            departure_time = FLT_MAX;
+            arrival_time = FLT_MAX;
         }
 
         // Insertion Sort Algorithm
-        if (sortedStack == NULL || (departure_time * tso >= sortedStack->route->numeric_departure * tso && arrival_time * tso <= sortedStack->route->numeric_arrival * tso)) {
+        if (sortedStack == NULL || departure_time < sortedStack->route->numeric_departure ||
+            (departure_time == sortedStack->route->numeric_departure && arrival_time < sortedStack->route->numeric_arrival)) {
             current->next_route = sortedStack;
             sortedStack = current;
         } else {
             KeepRoute *ptr = sortedStack;
-            while (ptr->next_route != NULL && (departure_time * tso < ptr->next_route->route->numeric_departure * tso || (departure_time * tso == ptr->next_route->route->numeric_departure * tso && arrival_time * tso > ptr->next_route->route->numeric_arrival * tso))) {
+            while (ptr->next_route != NULL &&
+                   (departure_time > ptr->next_route->route->numeric_departure ||
+                    (departure_time == ptr->next_route->route->numeric_departure &&
+                     arrival_time > ptr->next_route->route->numeric_arrival))) {
                 ptr = ptr->next_route;
             }
             current->next_route = ptr->next_route;
@@ -584,6 +596,73 @@ void insertion_sort_keep_route(KeepRoute **top, int tso) {
 }
 
 
+float get_departure_time(KeepRoute *node) {
+    // Get departure time for comparison
+    if (node->route != NULL) {
+        return node->route->numeric_departure;
+    } else {
+        // Handle case where routes are not properly initialized
+        return FLT_MAX;
+    }
+}
+
+float get_arrival_time(KeepRoute *node) {
+    // Get arrival time for comparison
+    if (node->route_three != NULL) {
+        return node->route_three->numeric_arrival;
+    } else if (node->route_two != NULL) {
+        return node->route_two->numeric_arrival;
+    } else if (node->route != NULL) {
+        return node->route->numeric_arrival;
+    } else {
+        // Handle case where routes are not properly initialized
+        return FLT_MAX;
+    }
+}
+
+void bubble_sort_keep_route(KeepRoute **top) {
+    if (*top == NULL || (*top)->next_route == NULL) {
+        return;  // If the stack is empty or has only one element, it's already sorted
+    }
+
+    int swapped;
+    KeepRoute *ptr1;
+    KeepRoute *lptr = NULL;
+
+    do {
+        swapped = 0;
+        ptr1 = *top;
+
+        while (ptr1->next_route != lptr) {
+            float departure_time_ptr1 = get_departure_time(ptr1);
+            float departure_time_next = get_departure_time(ptr1->next_route);
+            float arrival_time_ptr1 = get_arrival_time(ptr1);
+            float arrival_time_next = get_arrival_time(ptr1->next_route);
+
+            if (departure_time_ptr1 > departure_time_next || 
+                (departure_time_ptr1 == departure_time_next && arrival_time_ptr1 > arrival_time_next)) {
+                swap(ptr1, ptr1->next_route);
+                swapped = 1;
+            }
+            ptr1 = ptr1->next_route;
+        }
+        lptr = ptr1;
+    } while (swapped);
+}
+
+void swap(KeepRoute *a, KeepRoute *b) {
+    Route *temp_route = a->route;
+    Route *temp_route_two = a->route_two;
+    Route *temp_route_three = a->route_three;
+
+    a->route = b->route;
+    a->route_two = b->route_two;
+    a->route_three = b->route_three;
+
+    b->route = temp_route;
+    b->route_two = temp_route_two;
+    b->route_three = temp_route_three;
+}
 
 
 // Functions to find routes with 0-2 layovers
@@ -705,6 +784,72 @@ void find_routes_two_layover(StackRoute *routes, const char *departure, const ch
 
 
 //Connecting Flights Concern
+void drop_connecting_concern(KeepRoute **top) {
+    if (*top == NULL) {
+        return;  // If the stack is empty, there's nothing to drop
+    }
+
+    KeepRoute *current = *top;
+    KeepRoute *prev = NULL;
+
+    while (current != NULL) {
+        // Check if the departure time of the layover flight is before the arrival time of the first flight
+        if (current->route_two != NULL && current->route_two->numeric_departure < current->route->numeric_arrival) {
+            // Drop this element
+            KeepRoute *temp = current;
+            if (prev != NULL) {
+                prev->next_route = current->next_route;
+            } else {
+                // If prev is NULL, it means we're dropping the first element
+                *top = current->next_route;
+            }
+            current = current->next_route;
+            free(temp); // Free the memory of the dropped element
+        }
+        // Check if the departure time of the third flight is before the arrival time of the second flight
+        else if (current->route_three != NULL && current->route_three->numeric_departure < current->route_two->numeric_arrival) {
+            // Drop this element
+            KeepRoute *temp = current;
+            if (prev != NULL) {
+                prev->next_route = current->next_route;
+            } else {
+                // If prev is NULL, it means we're dropping the first element
+                *top = current->next_route;
+            }
+            current = current->next_route;
+            free(temp); // Free the memory of the dropped element
+        } else {
+            // Move to the next element
+            prev = current;
+            current = current->next_route;
+        }
+    }
+}
+
+void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove) {
+    KeepRoute *current = *top;
+    KeepRoute *prev = NULL;
+
+    // Iterate over the stack
+    while (current != NULL) {
+        if (current == trip_to_remove) {
+            // Found the node to remove
+            if (prev == NULL) {
+                // The node to remove is at the top of the stack
+                *top = current->next_route;
+            } else {
+                // The node to remove is somewhere else in the stack
+                prev->next_route = current->next_route;
+            }
+            // Free the memory allocated to the current node
+            free(current);
+            return;
+        }
+        prev = current;
+        current = current->next_route;
+    }
+}
+
 
 //Show KeepStack Functions
 

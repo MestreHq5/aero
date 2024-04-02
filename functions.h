@@ -160,12 +160,18 @@ void free_routes(StackRoute *top_route);
 //Algorithms Functions**********
 
 /**/
-void insertion_sort_keep_route(KeepRoute **top_route, int time_sort_option);
+void insertion_sort_keep_route(KeepRoute **top_route);
+
+void bubble_sort_keep_route(KeepRoute **top_route);
+void swap(KeepRoute *a, KeepRoute *b);
+float get_departure_time(KeepRoute *node);
+float get_arrival_time(KeepRoute *node);
 
 float numeric_time(char *time);
 
+void drop_connecting_concern(KeepRoute **top);
 
-
+void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove); //remove a trip from the stack that is causing problems in the insert sort
 
 //Functions to find routes with 0-2 layovers**********
 
