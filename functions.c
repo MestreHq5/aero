@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <float.h>
 
 #include "functions.h"
 
@@ -81,6 +82,20 @@ FILE *open_file(char *filename, char *mode){
     return file_pointer;
 }
 
+float numeric_time(char *time) {
+    
+    //Variables
+    int hours, minutes;
+    float numeric_time;
+
+    //Extract the hours and minutes from the string
+    sscanf(time, "%2d:%2d", &hours, &minutes);
+
+    //Convert the time to a numeric value (algrebra in now valid in the if's)
+    numeric_time = hours + (minutes / 60.0);
+
+    return numeric_time;
+}
 
 //Airports Functions
 StackAirport *init_airports(FILE *fpairports){
@@ -198,6 +213,8 @@ void null_init_route(Route *route){
     route->arrival_time[0] = '\0';
     route->distance = 0.0;
     route->airline[0] = '\0';
+    route->numeric_arrival = 0.0;
+    route->numeric_departure = 0.0;
 
 }
 
@@ -247,6 +264,10 @@ StackRoute *init_routes(FILE *fproutes, StackAirport *airports){
             continue; //Skip the current iteration
         }
 
+        //Convert the time to a numeric value to avoid string comparisons
+        route->numeric_departure = numeric_time(route->departure_time);
+        route->numeric_arrival = numeric_time(route->arrival_time);
+
         //Copy the airline name to the route structure
         strcpy(route->airline, current_airline);
 
@@ -273,7 +294,7 @@ int line_is_empty(char *line){
 
     while(line[i] != '\0'){
         if(line[i] != ' ' && line[i] != '\n' && line[i] != '\t' && line[i] != '\r'){
-            return 0; //There is a formatting issue in the line
+            return 0; //There is data in the line
         }
         i++;
     }
@@ -511,27 +532,12 @@ void free_routes(StackRoute *top_route) {
     }
 }
 
-float numeric_time(char *time) {
-    
-    //Variables
-    int hours, minutes;
-    float numeric_time;
-
-    //Extract the hours and minutes from the string
-    sscanf(time, "%2d:%2d", &hours, &minutes);
-
-    //Convert the time to a numeric value (algrebra in now valid in the if's)
-    numeric_time = hours + (minutes / 60.0);
-
-    return numeric_time;
-}
 
 //Algorithms Functions
 void insertion_sort_keep_route(KeepRoute **top, int tso) {
     
-    //Check if the stack is empty or has only one element (already sorted)
     if (*top == NULL || (*top)->next_route == NULL) {
-        return;  
+        return;  // If the stack is empty or has only one element, it's already sorted
     }
 
     KeepRoute *sortedStack = NULL;
@@ -539,24 +545,33 @@ void insertion_sort_keep_route(KeepRoute **top, int tso) {
 
     while (current != NULL) {
         KeepRoute *next = current->next_route;
-        float current_time;
+        float departure_time;
+        float arrival_time;
         
-        // Calculate the arrival time based on the layover numbers
-        if (current->route_three != NULL) {
-            current_time = numeric_time(current->route_three->arrival_time);
-        } else if (current->route_two != NULL) {
-            current_time = numeric_time(current->route_two->arrival_time);
+        // Set the departure and arrival times for the current route
+        if (current->route != NULL) {
+            departure_time = current->route->numeric_departure;
+            arrival_time = current->route->numeric_arrival;
         } else {
-            current_time = numeric_time(current->route->arrival_time);
+            departure_time = FLT_MAX;  // Set to maximum float value for null routes
+            arrival_time = FLT_MIN;    // Set to minimum float value for null routes
+        }
+
+        //update the arrival time if the trip has more than one route
+        if (current->route_two != NULL) {
+            arrival_time = current->route_two->numeric_arrival;
+        }
+        if (current->route_three != NULL) {
+            arrival_time = current->route_three->numeric_arrival;
         }
 
         // Insertion Sort Algorithm
-        if (sortedStack == NULL || tso * (numeric_time(sortedStack->route->arrival_time)) >= tso * current_time) {
+        if (sortedStack == NULL || (departure_time * tso >= sortedStack->route->numeric_departure * tso && arrival_time * tso <= sortedStack->route->numeric_arrival * tso)) {
             current->next_route = sortedStack;
             sortedStack = current;
         } else {
             KeepRoute *ptr = sortedStack;
-            while (ptr->next_route != NULL && tso * (numeric_time(ptr->next_route->route->arrival_time)) < tso * current_time) {
+            while (ptr->next_route != NULL && (departure_time * tso < ptr->next_route->route->numeric_departure * tso || (departure_time * tso == ptr->next_route->route->numeric_departure * tso && arrival_time * tso > ptr->next_route->route->numeric_arrival * tso))) {
                 ptr = ptr->next_route;
             }
             current->next_route = ptr->next_route;
@@ -567,6 +582,8 @@ void insertion_sort_keep_route(KeepRoute **top, int tso) {
 
     *top = sortedStack;  // Update the top pointer to point to the sorted stack
 }
+
+
 
 
 // Functions to find routes with 0-2 layovers
@@ -685,6 +702,9 @@ void find_routes_two_layover(StackRoute *routes, const char *departure, const ch
     }
 }
 
+
+
+//Connecting Flights Concern
 
 //Show KeepStack Functions
 

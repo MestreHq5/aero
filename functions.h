@@ -36,7 +36,7 @@ typedef struct route{
     char tripcode[10];
     char IATA_source[10], IATA_destiny[10];
     char departure_time[10], arrival_time[10];
-    float distance;
+    float distance, numeric_departure, numeric_arrival;
 } Route;
 
 typedef struct stack_routes {
