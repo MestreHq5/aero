@@ -57,56 +57,126 @@ typedef struct keep_route{
 
 //Main function *************
 
-/*This function checks the arguments inputed and detects several errors of data placement as well as detect if the user is asking for the routes or for the airports. 
-If it inputs a route, it will pass it to the function manage routes*/
+/*
+ * brief: This function checks the arguments inputed and detects several errors of data placement as well as detect if the user is asking for the list of routes or airports.
+ * param: int argc: Represents the number of command-line arguments.
+ * param: char *argv[]: An array of strings containing the actual command-line arguments.
+ * param: StackAirport *airports: A pointer to the stack containing the airports.
+ * param: StackRoutes *routes: A pointer to the stack containing the routes.
+ * return: void
+ */
 void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
 
-/*This function detects the number of layovers that the user is asking for and provides the list of routes possible, accordingly sorted*/
+/*
+ * brief: This function detects the number of layovers that the user is asking for and provides the list of routes possible, accordingly filtered and sorted.
+ * param: int argc: Represents the number of command-line arguments.
+ * param: char *argv[]: An array of strings containing the actual command-line arguments.
+ * param: StackAirport *airports: A pointer to the stack containing the airports.
+ * param: StackRoutes *routes: A pointer to the stack containing the routes.
+ * return: void
+ */
 void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
+
+
+
+
+
+
+void separate_cases_by_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int layover_and_sort[3]);
 
 
 //General Functions **********
 
-/*Function that is called to help the user defining what he wants from the program.
-It list the order in which the user should input the data*/
+/*
+ * brief: Function that is called to help the user by listing the order in which the data should be inputed.
+ * param: void
+ * return: void
+ */
 void arguments_error();
 
-/*Function to determine if the number of layovers is valid (0<L<2)
-If it is, it outputs the number of layovers,
-If it's not, it will print an error message and stop the program*/
+/*
+ * brief: Function to determine if the number of layovers is valid (0<L<2).
+ * param: char *option: A pointer to a string representing the number of layovers.
+ * return: If the number of layovers is valid, it will return it, if not, it will end the program and print an error message
+ */
 int layover_number(char *option);
 
-/*It will open the file and read, write or append on it*/
-FILE *open_file(char *filename, char *mode);
+/*
+ * brief: It will open the file and read, write or append on it
+ * param: char *filename: A pointer to a string representing the name of the file
+ * param: char *mode: A pointer to a string representing the mode in which the file should be opened
+ * return: If the number of layovers is valid, it will return it, if not, it will end the program and print an error message
+ */
+FILE *open_file(char *filename, char *mode); 
 
 /*Function to analyse the sorting according to time
-It returns 0 to sort from the earliest flight to the latest flight
-It returns 1 to sort from the latest flight to the earliest flight
-It stops the program if neither -TC nor -TD is inputed*/
+*/
+
+/*
+ * brief: Function to analyse the sorting according to time
+ * param: char *option: A pointer to a string representing the number of layovers.
+ * return: It returns 1 if -TC is inputed
+           It returns -1 if -TD is inputed
+           It stops the program  and prints an error message if neither -TC nor -TD is inputed
+ */
 int time_sort_option(char *option);
+
+int distance_sort_option(char *option);
+
 
 
 //Aiports Functions **********
 
-/*Function that feeds the airports in the aeroportos.txt file into the airport stack*/
+
+/*
+ * brief: Function that feeds the airports in the aeroportos.txt file into the airport stack.
+ * param: File *fp: A pointer to the airports file.
+ * return: It returns a pointer to the top of the stack of airports.
+ */
 StackAirport *init_airports(FILE *fp);
 
-/**/
+/*
+ * brief: Function that reads an airport line and analyses it to make sure that the line has all of the needed arguments.
+ * param: char *line: A pointer to a line.
+ * return: It returns the number of sucessful conversions.
+ */
 int handle_airport_line(char *line, Airport *airport);
 
 /*Function that prints all of the airports in the airport stack*/
+
+/*
+ * brief: Function that prints all of the airports in the airport stack.
+ * param: StackAirport *top_airport: A pointer to the top of the stack of airports.
+ * return: void
+ */
 void show_airports(StackAirport *top_airport);
 
-/**/
+
+
+/*
+ * brief: Function that deallocates the memory allocated for the stack of airports.
+ * param: StackAirport *top_airport: A pointer to the top of the stack of airports.
+ * return: void
+ */
 void free_airports(StackAirport *top_airport);
 
-/*Function that receives the airport stack and the IATA code for an airport and returns the pointer to that airport*/
+/*
+ * brief: Function that receives the airport stack and the IATA code for an airport and returns the pointer to that airport.
+ * param: StackAirport *top_airport: A pointer to the top of the stack of airports.
+ * param: const char *code_IATA: A pointer to a constant character string containing the IATA code of an airport.
+ * return: It returns a pointer to the airport correspondant to the IATA code.
+ */
 Airport *find_airport_by_IATA(StackAirport *airport, const char *code_IATA);
 
 
 //Routes Functions ***********
 
-/*Function that feeds the airports in the rotas.txt file into the routes stack*/
+/*
+ * brief: Function that feeds the routes in the rotas.txt file as well as their distance into the routes stack.
+ * param: File *fp: A pointer to the routes file.
+ * param: StackAirport *airport: A pointer to the top of the stack of airports.
+ * return: It returns a pointer to the top of the stack of routes.
+ */
 StackRoute *init_routes(FILE *fp, StackAirport *airports);
 
 /**/
@@ -139,13 +209,12 @@ void real_coordinates(double source_coord[2], double real_source_coord[3], float
 void null_init_top(KeepRoute *top_stack);
 
 /*Function to list the routes with 0 layovers*/
-void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option);
-
+void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int *time_and_distance);
 /*Function to list the routes with 1 layover*/
-void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option); 
+void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int *time_and_distance); 
 
 /*Function to list the routes with 2 layovers*/
-void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int time_sort_option);
+void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int *time_and_distance);
 
 
 //Free Functions****************
@@ -160,11 +229,12 @@ void free_routes(StackRoute *top_route);
 //Algorithms Functions**********
 
 /**/
-void insertion_sort_keep_route(KeepRoute **top_route);
+void bubble_sort_keep_route(KeepRoute **top_route, int tso);
 
-void bubble_sort_keep_route(KeepRoute **top_route);
 void swap(KeepRoute *a, KeepRoute *b);
+
 float get_departure_time(KeepRoute *node);
+
 float get_arrival_time(KeepRoute *node);
 
 float numeric_time(char *time);
@@ -172,6 +242,13 @@ float numeric_time(char *time);
 void drop_connecting_concern(KeepRoute **top);
 
 void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove); //remove a trip from the stack that is causing problems in the insert sort
+
+//Distance Sort Functions**********
+
+float get_lesser_distance(KeepRoute *top);
+
+void drop_long_trips(KeepRoute **top);
+
 
 //Functions to find routes with 0-2 layovers**********
 

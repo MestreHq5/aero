@@ -5,6 +5,11 @@
 
 #include "functions.h"
 
+//Auxialiary definitions
+#define LAYOVERS 0
+#define TIME_OPTION 1
+#define DISTANCE_OPTION 2
+
 //Function Prototypes
 void handle_arguments(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
 void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *routes);
@@ -74,7 +79,7 @@ void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *r
     
     //Variables
     Airport *airport_source, *airport_destiny;
-    int layovers, time_option;
+    int layover_and_sort[3];
 
     //Check if the IATA codes are valid and avaiable
     airport_source = find_airport_by_IATA(airports, argv[1]);
@@ -87,52 +92,51 @@ void manage_routes(int argc, char *argv[], StackAirport *airports, StackRoute *r
 
     //Check if the layover option is valid
     if (strcmp(argv[3], "-L") != 0){
+
         printf("Invalid Layover specifier: Execution failed...\n");
         arguments_error();
         return;
     }
 
-    layovers = layover_number(argv[4]); //will validate the layover number
+    
+    layover_and_sort[LAYOVERS] = layover_number(argv[4]); 
+    layover_and_sort[TIME_OPTION] = 0; //Default value for sort by time
+    layover_and_sort[DISTANCE_OPTION] = 0; //Default value for sort by distance
 
-    if (argc == 5){
-        if (layovers == 0){
-            list_direct_flights(airports, routes, airport_source, airport_destiny, 0); //will list all the direct flights (no sort)
-
-        } else if(layovers == 1){
-            list_one_layover(airports, routes, airport_source, airport_destiny, 0); //One layover (no sort)
-
-        }else{
-            list_two_layovers(airports, routes, airport_source, airport_destiny, 0); //Two layovers (no sort)
-
-        }
+    if (argc >= 6){
+        layover_and_sort[TIME_OPTION] = time_sort_option(argv[5]);
     }
 
-    if (argc == 6){
-        
-        time_option = time_sort_option(argv[5]);
-        if (layovers == 0){
-            list_direct_flights(airports, routes, airport_source, airport_destiny, time_option); //List direct flights (sorted)
-
-        } else if(layovers == 1){
-            list_one_layover(airports, routes, airport_source, airport_destiny, time_option); //One layover (sorted)
-
-        }else{
-            list_two_layovers(airports, routes, airport_source, airport_destiny, time_option); //Two layovers (sorted)
-
-        }
+    if (argc == 7){
+        layover_and_sort[DISTANCE_OPTION] = distance_sort_option(argv[6]);
     }
 
-    if (argc == 7 && layovers > 0){
-        time_option = time_sort_option(argv[5]);
-        if (layovers == 0){
-            list_direct_flights(airports, routes, airport_source, airport_destiny, time_option); //List direct flights (sorted)
-
-        } else if(layovers == 1){
-            list_one_layover(airports, routes, airport_source, airport_destiny, time_option); //One layover (sorted)
-
-        }else{
-            list_two_layovers(airports, routes, airport_source, airport_destiny, time_option); //Two layovers (sorted)
-
-        }
-    }
+    separate_cases_by_layovers(airports, routes, airport_source, airport_destiny, layover_and_sort);
+    
 }
+
+void separate_cases_by_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int layover_and_sort[3]){
+
+    //Variables
+    int time_and_distance[2];
+
+    //Initialize the vector
+    time_and_distance[0] = layover_and_sort[TIME_OPTION];
+    time_and_distance[1] = layover_and_sort[DISTANCE_OPTION];
+
+    
+    if (layover_and_sort[0] == 0){
+            list_direct_flights(airports, routes, airport_source, airport_destiny, time_and_distance); //List direct flights
+
+        } else if(layover_and_sort[0] == 1){
+            list_one_layover(airports, routes, airport_source, airport_destiny, time_and_distance); //One layover
+
+        }else if (layover_and_sort[0] == 2){
+            list_two_layovers(airports, routes, airport_source, airport_destiny, time_and_distance); //Two layovers
+
+        }
+}
+
+
+
+
