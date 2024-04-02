@@ -547,6 +547,7 @@ void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airp
 
 
 //Free functions
+
 void free_keep_route(KeepRoute *top_route){
 
     while (top_route != NULL){
@@ -685,7 +686,6 @@ float get_lesser_distance(KeepRoute *top){
 
         //Avoid Errors in sorting remove the trip with the distance 0
         if (current_distance == 0.0){
-            remove_trip(&top, current);
             current = current->next_route;
             continue;
         } 
@@ -695,7 +695,6 @@ float get_lesser_distance(KeepRoute *top){
             lesser_distance = current_distance;
         }
 
-        printf("Currente Distance [%f]   Lesser Distance [%f] \n", current_distance, lesser_distance);
         current = current->next_route;
 
     }
@@ -707,8 +706,6 @@ void drop_long_trips(KeepRoute **top) {
     KeepRoute *current = *top;
     KeepRoute *prev = NULL;
     float lesser_distance = get_lesser_distance(*top);
-
-    printf("lesser_distance: %f\n", lesser_distance);
 
     while (current != NULL) {
         // Check if current->route is NULL before accessing its distance
@@ -920,12 +917,14 @@ void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove) {
             }
             // Free the memory allocated to the current node
             free(current);
+            current = NULL;  // Set current to NULL after freeing it
             return;
         }
         prev = current;
         current = current->next_route;
     }
 }
+
 
 
 //Show KeepStack Functions

@@ -109,8 +109,6 @@ int layover_number(char *option);
  */
 FILE *open_file(char *filename, char *mode); 
 
-/*Function to analyse the sorting according to time
-*/
 
 /*
  * brief: Function to analyse the sorting according to time
@@ -123,6 +121,7 @@ int time_sort_option(char *option);
 
 int distance_sort_option(char *option);
 
+float numeric_time(char *time);
 
 
 //Aiports Functions **********
@@ -220,7 +219,13 @@ void show_routes(StackRoute *top_route);
 
 //Distance Functions **********
 
-/**/
+
+/*
+ * brief: The purpose of this function is to parse latitude and longitude information stored in the Airport structure and convert it into decimal degree format, adjusted for the appropriate direction.
+ * param: Airport *airport: A pointer to the Airport structure containing latitude and longitude information.
+ * param: double coord_vector[2]: An array with the latitude and longitude of an airport.
+ * return: void
+ */
 void coordinates_parser(Airport *airport, double coord_vector[2]);
 
 /*
@@ -235,25 +240,61 @@ void real_coordinates(double source_coord[2], double real_source_coord[3], float
 
 //List Flights Functions**********
 
-//Initializes the top of the stack fields with NULL
+/*
+ * brief: Initializes the top of the stack fields with NULL
+ * param: KeepRoute *top_stack: a pointer to a KeepRoute structure.
+ * return: void
+ */
 void null_init_top(KeepRoute *top_stack);
 
-/*Function to list the routes with 0 layovers*/
+/*
+ * brief: Function to list the routes with 0 layovers.
+ * param: StackAirport *airports: A pointer to the top of the stack of airports. 
+ * param: StackRoute *routes: A pointer to the top of the stack of routes. 
+ * param: Airport *airport_source: A pointer to the source airport from which the flights originate.
+ * param: Airport *aiport_destiny: A pointer to the destination airport to which the flights are headed.
+ * param: int *time_and_distance: An array containing information about sorting preferences.
+ * return: void
+ */
 void list_direct_flights(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int *time_and_distance);
 
-/*Function to list the routes with 1 layover*/
+/*
+ * brief: Function to list the routes with 1 layover.
+ * param: StackAirport *airports: A pointer to the top of the stack of airports. 
+ * param: StackRoute *routes: A pointer to the top of the stack of routes. 
+ * param: Airport *airport_source: A pointer to the source airport from which the flights originate.
+ * param: Airport *aiport_destiny: A pointer to the destination airport to which the flights are headed.
+ * param: int *time_and_distance: An array containing information about sorting preferences.
+ * return: void
+ */
 void list_one_layover(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int *time_and_distance); 
 
-/*Function to list the routes with 2 layovers*/
+/*
+ * brief: Function to list the routes with 2 layovers.
+ * param: StackAirport *airports: A pointer to the top of the stack of airports. 
+ * param: StackRoute *routes: A pointer to the top of the stack of routes. 
+ * param: Airport *airport_source: A pointer to the source airport from which the flights originate.
+ * param: Airport *aiport_destiny: A pointer to the destination airport to which the flights are headed.
+ * param: int *time_and_distance: An array containing information about sorting preferences.
+ * return: void
+ */
 void list_two_layovers(StackAirport *airports, StackRoute *routes, Airport *airport_source, Airport *airport_destiny, int *time_and_distance);
 
 
 //Free Functions****************
 
-/**/
+/*
+ * brief: Function that releases the memory allocated for a linked list of KeepRoute structures. 
+ * param: KeepRoute *top_route: A pointer to the top of the linked list of KeepRoute structures.
+ * return: void
+ */
 void free_keep_route(KeepRoute *top_route);
 
-/**/
+/*
+ * brief: Function that releases the memory allocated for a linked list of StackRoute structures. 
+ * param: StackRoute *top_route: A pointer to the top of the linked list of StackRoute structures.
+ * return: void
+ */
 void free_routes(StackRoute *top_route);
 
 
@@ -264,15 +305,20 @@ void bubble_sort_keep_route(KeepRoute **top_route, int tso);
 
 void swap(KeepRoute *a, KeepRoute *b);
 
+/*
+ * brief: Function that provides a convenient way to retrieve the departure time of the first flight in a trip represented by a KeepRoute structure.
+ * param: KeepRoute *node: A pointer to a KeepRoute structure representing a trip consisting of one or more flights.
+ * return: Returns the departing time of the first flight.
+ */
 float get_departure_time(KeepRoute *node);
 
+/*
+ * brief: Function that provides a convenient way to retrieve the arrival time of the last flight in a trip represented by a KeepRoute structure.
+ * param: KeepRoute *node: A pointer to a KeepRoute structure representing a trip consisting of one or more flights.
+ * return: Returns the arrival time of the last flight.
+ */
 float get_arrival_time(KeepRoute *node);
 
-float numeric_time(char *time);
-
-void drop_connecting_concern(KeepRoute **top);
-
-void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove); //remove a trip from the stack that is causing problems in the sorting
 
 //Distance Sort Functions**********
 
@@ -280,20 +326,53 @@ float get_lesser_distance(KeepRoute *top);
 
 void drop_long_trips(KeepRoute **top);
 
+float sum_trip_distances(KeepRoute *trip);
+
 
 //Functions to find routes with 0-2 layovers**********
 
-/*Find routes with 0 layovers*/
+/*
+ * brief: Function that finds routes with 0 layovers.
+ * param: StackRoute *routes: A pointer to the top of the stack of routes.
+ * param: const char *airport_source: A string representing the IATA code of the source airport.
+ * param: const char *airport_destiny: A string representing the IATA code of the destination airport.
+ * param: KeepRoute **top_stack: A pointer to a pointer to the top of the stack of KeepRoute structures. 
+ * return: void
+ */
 void find_routes_no_layover(StackRoute *routes, const char *airport_source, const char *airport_destiny, KeepRoute **top_stack);
 
-/*Find routes with 1 layover*/
+/*
+ * brief: Function that finds routes with 1 layover.
+ * param: StackRoute *routes: A pointer to the top of the stack of routes.
+ * param: const char *airport_source: A string representing the IATA code of the source airport.
+ * param: const char *airport_destiny: A string representing the IATA code of the destination airport.
+ * param: KeepRoute **top_stack: A pointer to a pointer to the top of the stack of KeepRoute structures. 
+ * return: void
+ */
 void find_routes_one_layover(StackRoute *routes, const char *departure, const char *destination, KeepRoute **top_stack);
 
-/*Find routes with 2 layovers*/
+/*
+ * brief: Function that finds routes with 2 layovers.
+ * param: StackRoute *routes: A pointer to the top of the stack of routes.
+ * param: const char *airport_source: A string representing the IATA code of the source airport.
+ * param: const char *airport_destiny: A string representing the IATA code of the destination airport.
+ * param: KeepRoute **top_stack: A pointer to a pointer to the top of the stack of KeepRoute structures. 
+ * return: void
+ */
 void find_routes_two_layover(StackRoute *routes, const char *departure, const char *destination, KeepRoute **top_stack);
 
 
+//Connecting Flights Concern*************
+
+/**/
+void drop_connecting_concern(KeepRoute **top);
+
+/**/
+void remove_trip(KeepRoute **top, KeepRoute *trip_to_remove);
+
+
 //Show KeepStack Functions****************
+
 /**/
 void show_keep_route(KeepRoute *top_route);
 
